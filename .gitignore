@@ -1,6 +1,9 @@
 *.Rproj*
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> d1040963e542698bd1ef18fe9d205729a15df775
 # History files
 .Rhistory
 .Rapp.history
