@@ -1,7 +1,21 @@
+
 ```{r}
-df <- read.csv("athlete_events-Olympic Dataset.csv")
-View(df)
+library(ggplot2)
 ```
 
+```{r}
+
+
+
+df <- read.csv("athlete_events-Olympic Dataset.csv")
+View(df)
+
+
+```
+
+```{r}
+ggplot(df, aes(NOC, Games , color = Season)) + geom_point()
+
+```
 
 
