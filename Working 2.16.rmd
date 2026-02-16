@@ -44,22 +44,7 @@ ggplot(participation, aes(x = Year, y = Athletes, color = Sex)) +
        x = "Year", y = "Number of Athletes") +
   scale_color_manual(values = c("M" = "#0072B2", "F" = "#D55E00"))
 ```
-```{r}
-# Medal counts by type
-medal_type <- df %>%
-  filter(!is.na(Medal)) %>%
-  group_by(Year, Medal) %>%
-  summarise(Count = n(), .groups = 'drop')
 
-ggplot(medal_type, aes(x = Year, y = Count, fill = Medal)) +
-  geom_area() +
-  theme_minimal() +
-  labs(title = "Olympic Medals Awarded Over Time",
-       x = "Year", y = "Number of Medals") +
-  scale_fill_manual(values = c("Gold" = "#FFD700", 
-                                "Silver" = "#C0C0C0", 
-                                "Bronze" = "#CD7F32"))
-```
 ```{r}
 # Filter for top 10 sports and remove NAs
 top_sports <- df %>%
