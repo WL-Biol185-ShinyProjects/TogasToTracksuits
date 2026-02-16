@@ -60,4 +60,35 @@ ggplot(medal_type, aes(x = Year, y = Count, fill = Medal)) +
                                 "Silver" = "#C0C0C0", 
                                 "Bronze" = "#CD7F32"))
 ```
+```{r}
+# Filter for top 10 sports and remove NAs
+top_sports <- df %>%
+  group_by(Sport) %>%
+  summarise(Count = n()) %>%
+  arrange(desc(Count)) %>%
+  head(10) %>%
+  pull(Sport)
+
+sport_body <- df %>%
+  filter(Sport %in% top_sports, !is.na(Height), !is.na(Weight))
+
+ggplot(sport_body, aes(x = Height, y = Weight, color = Sport)) +
+  geom_point(alpha = 0.3) +
+  theme_minimal() +
+  labs(title = "Athlete Body Types by Sport",
+       x = "Height (cm)", y = "Weight (kg)")
+```
+```{r}
+season_participation <- df %>%
+  group_by(Year, Season) %>%
+  summarise(Athletes = n_distinct(ID), .groups = 'drop')
+
+ggplot(season_participation, aes(x = Year, y = Athletes, color = Season)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  theme_minimal() +
+  labs(title = "Summer vs Winter Olympics Participation",
+       x = "Year", y = "Number of Athletes") +
+  scale_color_manual(values = c("Summer" = "#E69F00", "Winter" = "#56B4E9"))
+```
 
