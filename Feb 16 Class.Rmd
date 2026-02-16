@@ -1,5 +1,0 @@
----
-title: "Feb 16 Class"
-output: html_document
----
-
