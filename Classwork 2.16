@@ -1,0 +1,6 @@
+```{r}
+df <- read.csv("athlete_events-Olympic Dataset.csv")
+View(df)
+```
+
+
