@@ -1,10 +1,6 @@
 # TogasToTracksuits
-Analyzing the data from over 120 years of Olympic games
-<<<<<<< HEAD
+Analyzing 120 years of Olympic Data
 =======
 
-
-<<<<<<< HEAD
-Lil Biscuit, Tilman, James
+Jack Roszko, Tilman Gates & James Haley
 =========================
->>>>>>> 00b7778879db78f2578041a1827f6908510ba531
