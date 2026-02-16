@@ -76,4 +76,50 @@ ggplot(season_participation, aes(x = Year, y = Athletes, color = Season)) +
        x = "Year", y = "Number of Athletes") +
   scale_color_manual(values = c("Summer" = "#E69F00", "Winter" = "#56B4E9"))
 ```
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Count medals per athlete
+top_athletes <- df %>%
+  filter(!is.na(Medal)) %>%
+  group_by(Name, Sex, Sport) %>%
+  summarise(
+    Gold = sum(Medal == "Gold"),
+    Silver = sum(Medal == "Silver"),
+    Bronze = sum(Medal == "Bronze"),
+    Total = n(),
+    .groups = 'drop'
+  ) %>%
+  arrange(desc(Total)) %>%
+  head(10)
+
+# Reshape data for stacked bar chart
+top_athletes_long <- top_athletes %>%
+  select(Name, Gold, Silver, Bronze) %>%
+  pivot_longer(cols = c(Gold, Silver, Bronze), 
+               names_to = "Medal_Type", 
+               values_to = "Count") %>%
+  mutate(Medal_Type = factor(Medal_Type, levels = c("Gold", "Silver", "Bronze")))
+
+# Create the plot
+ggplot(top_athletes_long, aes(x = reorder(Name, Count), y = Count, fill = Medal_Type)) +
+  geom_col() +
+  coord_flip() +
+  theme_minimal() +
+  scale_fill_manual(values = c("Gold" = "#FFD700", 
+                                "Silver" = "#C0C0C0", 
+                                "Bronze" = "#CD7F32")) +
+  labs(title = "Top 10 Olympic Athletes of All Time",
+       subtitle = "By Total Medal Count",
+       x = "", 
+       y = "Number of Medals",
+       fill = "Medal Type") +
+  theme(
+    plot.title = element_text(size = 16, face = "bold"),
+    axis.text.y = element_text(size = 11),
+    legend.position = "bottom"
+  )
+```
+
 
