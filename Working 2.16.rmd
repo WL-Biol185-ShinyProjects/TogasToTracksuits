@@ -121,57 +121,5 @@ ggplot(top_athletes_long, aes(x = reorder(Name, Count), y = Count, fill = Medal_
     legend.position = "bottom"
   )
 ```
-```{r}
-library(ggplot2)
-library(dplyr)
-
-# Get Phelps' medal count
-phelps_medals <- df %>%
-  filter(Name == "Michael Fred Phelps, II", !is.na(Medal)) %>%
-  nrow()
-
-# Get country medal counts (top countries)
-country_medals <- df %>%
-  filter(!is.na(Medal)) %>%
-  group_by(NOC, Team) %>%
-  summarise(Total_Medals = n(), .groups = 'drop') %>%
-  arrange(desc(Total_Medals))
-
-# Find countries Phelps has beaten
-phelps_vs_countries <- country_medals %>%
-  filter(Total_Medals < phelps_medals) %>%
-  arrange(desc(Total_Medals)) %>%
-  head(15) %>%
-  mutate(Entity = Team, Medals = Total_Medals, Type = "Country")
-
-# Add Phelps to the data
-phelps_row <- data.frame(
-  Entity = "Michael Phelps",
-  Medals = phelps_medals,
-  Type = "Athlete"
-)
-
-# Combine data
-comparison_data <- bind_rows(phelps_row, phelps_vs_countries %>% select(Entity, Medals, Type))
-
-# Create the plot
-ggplot(comparison_data, aes(x = reorder(Entity, Medals), y = Medals, fill = Type)) +
-  geom_col() +
-  coord_flip() +
-  theme_minimal() +
-  scale_fill_manual(values = c("Athlete" = "#FFD700", "Country" = "#0072B2")) +
-  labs(title = "Michael Phelps vs Countries",
-       subtitle = paste0("Phelps has won ", phelps_medals, " Olympic medals - more than these entire nations"),
-       x = "", 
-       y = "Total Olympic Medals (All-Time)",
-       fill = "") +
-  theme(
-    plot.title = element_text(size = 16, face = "bold"),
-    plot.subtitle = element_text(size = 11),
-    axis.text.y = element_text(size = 10),
-    legend.position = "bottom"
-  ) +
-  geom_hline(yintercept = phelps_medals, linetype = "dashed", color = "red", alpha = 0.5)
-```
 
 
