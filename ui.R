@@ -48,7 +48,7 @@ olympic_countries <- c(
 )
 
 ui <- dashboardPage(
-  skin = "blue",
+  skin = "red",
   
   dashboardHeader(
     title = span(
