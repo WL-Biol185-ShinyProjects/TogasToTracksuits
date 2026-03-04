@@ -8,6 +8,16 @@ library(htmltools)
 library(DT)
 library(readxl)
 
+library(shiny)
+library(shinydashboard)
+library(leaflet)
+library(dplyr)
+library(tidyverse)
+library(plotly)
+library(htmltools)
+library(DT)
+library(readxl)
+
 # Olympic countries list
 olympic_countries <- c(
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", 
@@ -48,7 +58,7 @@ olympic_countries <- c(
 )
 
 ui <- dashboardPage(
-  skin = "red",
+  skin = "purple",
   
   dashboardHeader(
     title = span(
@@ -72,99 +82,307 @@ ui <- dashboardPage(
   ),
   
   dashboardBody(
-    # Custom CSS
+    # Custom CSS - Olympic themed (Gold, Blue, Green)
     tags$head(
       tags$style(HTML("
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
         
+        /* Global Styles */
         body, .content-wrapper, .main-sidebar {
-          font-family: 'Inter', sans-serif !important;
+          font-family: 'Poppins', sans-serif !important;
         }
         
         .content-wrapper {
-          background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%) !important;
+          background: linear-gradient(135deg, #f0f4f8 0%, #e6eef5 100%) !important;
         }
         
+        /* Header - Olympic Blue and Gold */
         .main-header .logo {
-          background: linear-gradient(135deg, #0066cc 0%, #004c99 100%) !important;
+          background: linear-gradient(135deg, #0085C7 0%, #005A8C 100%) !important;
           font-weight: 700 !important;
-          border-bottom: 3px solid #FFD700;
+          border-bottom: 4px solid #FFD700;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         
         .main-header .navbar {
-          background: linear-gradient(135deg, #0066cc 0%, #004c99 100%) !important;
+          background: linear-gradient(135deg, #0085C7 0%, #005A8C 100%) !important;
         }
         
+        /* Sidebar - Deep Purple/Navy */
         .main-sidebar {
-          background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%) !important;
+          background: linear-gradient(180deg, #2C3E50 0%, #34495E 100%) !important;
         }
         
         .sidebar-menu > li > a {
-          color: #e8ecf1 !important;
-          border-left: 3px solid transparent;
+          color: #ECF0F1 !important;
+          border-left: 4px solid transparent;
           transition: all 0.3s ease;
+          padding: 16px 20px !important;
+          font-weight: 500;
         }
         
         .sidebar-menu > li > a:hover {
-          background: rgba(255, 215, 0, 0.1) !important;
-          border-left: 3px solid #FFD700;
+          background: rgba(255, 215, 0, 0.15) !important;
+          border-left: 4px solid #FFD700;
+          transform: translateX(3px);
         }
         
         .sidebar-menu > li.active > a {
-          background: linear-gradient(90deg, rgba(255, 215, 0, 0.2) 0%, transparent 100%) !important;
-          border-left: 3px solid #FFD700;
+          background: linear-gradient(90deg, rgba(255, 215, 0, 0.25) 0%, transparent 100%) !important;
+          border-left: 4px solid #FFD700;
+          font-weight: 600;
+          color: #FFD700 !important;
         }
         
+        /* Box Styling - Clean and Modern */
         .box {
-          border-radius: 15px !important;
-          box-shadow: 0 8px 25px rgba(0,0,0,0.08) !important;
-          border: none !important;
+          border-radius: 12px !important;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.06) !important;
+          border: 1px solid #E8ECF0 !important;
+          transition: all 0.3s ease;
+          background: white !important;
+        }
+        
+        .box:hover {
+          box-shadow: 0 8px 30px rgba(0,0,0,0.1) !important;
+          transform: translateY(-2px);
         }
         
         .box-header {
-          background: linear-gradient(135deg, #0066cc 0%, #004c99 100%) !important;
+          background: linear-gradient(135deg, #0085C7 0%, #005A8C 100%) !important;
           color: white !important;
-          border-radius: 15px 15px 0 0 !important;
+          border-radius: 12px 12px 0 0 !important;
+          padding: 18px 20px !important;
         }
         
+        .box-header .box-title {
+          font-weight: 600 !important;
+          font-size: 17px !important;
+          letter-spacing: 0.3px;
+        }
+        
+        /* Metric Cards - Olympic Ring Colors */
         .metric-card {
-          background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-          padding: 25px;
-          border-radius: 15px;
+          background: white;
+          padding: 30px 20px;
+          border-radius: 12px;
           text-align: center;
-          box-shadow: 0 5px 20px rgba(0,0,0,0.06);
-          border-top: 4px solid #FFD700;
+          box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+          border-top: 5px solid #FFD700;
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .metric-card::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 60px;
+          height: 60px;
+          background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
+        }
+        
+        .metric-card:hover {
+          transform: translateY(-5px) scale(1.02);
+          box-shadow: 0 8px 25px rgba(0,133,199,0.15);
+          border-top-color: #0085C7;
         }
         
         .metric-card h4 {
-          color: #6c757d;
-          font-size: 14px;
+          color: #7F8C8D;
+          font-size: 13px;
           font-weight: 600;
           text-transform: uppercase;
+          letter-spacing: 1.2px;
+          margin-bottom: 12px;
         }
         
         .metric-card h2 {
-          color: #0066cc;
-          font-size: 36px;
+          color: #0085C7;
+          font-size: 38px;
           font-weight: 700;
+          margin: 0;
+          background: linear-gradient(135deg, #0085C7, #005A8C);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
         }
         
+        /* Buttons - Olympic Gold */
         .btn-primary {
-          background: linear-gradient(135deg, #0066cc 0%, #004c99 100%) !important;
+          background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
           border: none !important;
-          color: white !important;
+          color: #2C3E50 !important;
+          font-weight: 600 !important;
+          letter-spacing: 0.5px;
+          transition: all 0.3s ease !important;
+          box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3) !important;
         }
         
         .btn-primary:hover {
-          background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
+          background: linear-gradient(135deg, #0085C7 0%, #005A8C 100%) !important;
+          color: white !important;
+          box-shadow: 0 6px 25px rgba(0, 133, 199, 0.4) !important;
+          transform: translateY(-2px);
         }
         
+        /* Headers - Olympic Colors */
         h2 {
-          color: #0066cc;
+          color: #0085C7;
           font-weight: 700;
-          border-bottom: 3px solid #FFD700;
+          border-bottom: 4px solid #FFD700;
           display: inline-block;
-          padding-bottom: 10px;
+          padding-bottom: 12px;
+          margin-bottom: 25px;
+        }
+        
+        h3, h4 {
+          color: #2C3E50;
+          font-weight: 600;
+        }
+        
+        /* Home Page - Olympic Rings Theme */
+        .olympic-home {
+          background: white;
+          border-radius: 20px;
+          padding: 60px 40px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .olympic-home::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 6px;
+          background: linear-gradient(90deg, 
+            #0085C7 0%, #0085C7 20%,
+            #000000 20%, #000000 40%,
+            #EE334E 40%, #EE334E 60%,
+            #FFD700 60%, #FFD700 80%,
+            #00A651 80%, #00A651 100%);
+        }
+        
+        .olympic-title {
+          color: #0085C7;
+          font-weight: 800;
+          font-size: 52px;
+          margin-bottom: 15px;
+          text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .olympic-subtitle {
+          color: #7F8C8D;
+          font-size: 24px;
+          font-weight: 500;
+          margin-bottom: 35px;
+        }
+        
+        .feature-box {
+          background: linear-gradient(135deg, #F8F9FA 0%, #ECF0F1 100%);
+          padding: 35px;
+          border-radius: 15px;
+          border-left: 6px solid #FFD700;
+          max-width: 700px;
+          margin: 35px auto;
+        }
+        
+        .feature-box h4 {
+          color: #0085C7;
+          font-size: 22px;
+          margin-bottom: 20px;
+          font-weight: 700;
+        }
+        
+        .feature-box ul {
+          list-style: none;
+          padding: 0;
+        }
+        
+        .feature-box li {
+          padding: 12px 0;
+          font-size: 16px;
+          color: #2C3E50;
+          font-weight: 500;
+          border-bottom: 1px solid #E0E0E0;
+        }
+        
+        .feature-box li:last-child {
+          border-bottom: none;
+        }
+        
+        .feature-box li i {
+          color: #FFD700;
+          margin-right: 12px;
+          font-size: 18px;
+        }
+        
+        /* Tables */
+        table thead {
+          background: linear-gradient(135deg, #0085C7 0%, #005A8C 100%);
+          color: white;
+        }
+        
+        table thead th {
+          padding: 15px;
+          font-weight: 600;
+          text-transform: uppercase;
+          font-size: 12px;
+          letter-spacing: 1px;
+        }
+        
+        table tbody tr:hover {
+          background: rgba(0, 133, 199, 0.05);
+        }
+        
+        /* Form Controls */
+        .form-control, .selectize-input {
+          border-radius: 8px !important;
+          border: 2px solid #E0E6ED !important;
+          transition: all 0.3s ease !important;
+        }
+        
+        .form-control:focus, .selectize-input.focus {
+          border-color: #0085C7 !important;
+          box-shadow: 0 0 0 0.2rem rgba(0, 133, 199, 0.15) !important;
+        }
+        
+        /* Scrollbar - Olympic Colors */
+        ::-webkit-scrollbar {
+          width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: #ECF0F1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, #0085C7, #FFD700);
+          border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(180deg, #005A8C, #FFA500);
+        }
+        
+        /* Animation */
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .box, .metric-card {
+          animation: fadeInUp 0.6s ease;
         }
       "))
     ),
@@ -177,33 +395,31 @@ ui <- dashboardPage(
               fluidRow(
                 column(width = 12,
                        tags$div(
-                         style = "text-align: center; background: white; padding: 50px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);",
+                         class = "olympic-home",
+                         style = "text-align: center;",
                          
-                         icon("medal", style = "font-size: 80px; color: #FFD700; margin-bottom: 20px;"),
+                         icon("medal", style = "font-size: 90px; color: #FFD700; margin-bottom: 25px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));"),
                          
-                         tags$h1("Olympic Analytics", 
-                                 style = "color: #0066cc; font-weight: 800; font-size: 48px; margin-bottom: 15px;"),
-                         tags$h3("120 Years of Olympic History (1896-2016)", 
-                                 style = "color: #666; font-size: 28px; margin-bottom: 30px;"),
+                         tags$h1("Olympic Analytics", class = "olympic-title"),
+                         tags$h3("120 Years of Excellence (1896-2016)", class = "olympic-subtitle"),
                          
                          tags$p(
-                           style = "font-size: 19px; line-height: 1.8; max-width: 850px; margin: 0 auto 30px auto; color: #495057;",
-                           "Explore over a century of Olympic Games data. Discover legendary athletes, ",
+                           style = "font-size: 18px; line-height: 1.8; max-width: 800px; margin: 0 auto 35px auto; color: #5D6D7E;",
+                           "Journey through over a century of Olympic Games data. Discover legendary athletes, ",
                            "compare nations, analyze sports trends, and uncover fascinating insights from the world's ",
-                           "greatest sporting event."
+                           "most celebrated sporting competition."
                          ),
                          
                          tags$div(
-                           style = "background: #f8f9fa; padding: 30px; border-radius: 15px; max-width: 650px; margin: 30px auto; border-left: 5px solid #FFD700;",
-                           tags$h4("Features:", style = "color: #0066cc; margin-bottom: 20px;"),
+                           class = "feature-box",
+                           tags$h4(icon("chart-line"), " What's Inside"),
                            tags$ul(
-                             style = "list-style: none; padding: 0; text-align: left;",
-                             tags$li(icon("medal"), " 271,116 athlete-event records from 1896-2016"),
-                             tags$li(icon("user"), " 134,732 unique athletes profiled"),
-                             tags$li(icon("flag"), " 230 countries and territories"),
-                             tags$li(icon("running"), " 66 different Olympic sports"),
-                             tags$li(icon("chart-line"), " Interactive visualizations and comparisons"),
-                             tags$li(icon("download"), " Export data for your own analysis")
+                             tags$li(icon("medal"), " 271,116 athlete-event records spanning 120 years"),
+                             tags$li(icon("user"), " 134,732 unique athletes from around the globe"),
+                             tags$li(icon("flag"), " 230 countries and territories represented"),
+                             tags$li(icon("running"), " 66 different Olympic sports analyzed"),
+                             tags$li(icon("trophy"), " Interactive charts and country comparisons"),
+                             tags$li(icon("download"), " Export capabilities for deeper analysis")
                            )
                          )
                        )
@@ -226,7 +442,7 @@ ui <- dashboardPage(
                 column(3, div(class = "metric-card", 
                               h4("Countries"), h2("230"))),
                 column(3, div(class = "metric-card", 
-                              h4("Events"), h2("15,000+")))
+                              h4("Sports"), h2("66")))
               ),
               
               br(),
@@ -283,12 +499,14 @@ ui <- dashboardPage(
               ),
               
               fluidRow(
-                column(4, div(class = "metric-card", 
+                column(3, div(class = "metric-card", 
                               h4("Total Medals"), h2(textOutput("athlete_total_medals", inline = TRUE)))),
-                column(4, div(class = "metric-card", 
+                column(3, div(class = "metric-card", 
                               h4("Gold"), h2(textOutput("athlete_gold", inline = TRUE)))),
-                column(4, div(class = "metric-card", 
-                              h4("Silver"), h2(textOutput("athlete_silver", inline = TRUE))))
+                column(3, div(class = "metric-card", 
+                              h4("Silver"), h2(textOutput("athlete_silver", inline = TRUE)))),
+                column(3, div(class = "metric-card", 
+                              h4("Bronze"), h2(textOutput("athlete_bronze", inline = TRUE))))
               ),
               
               br(),
@@ -362,9 +580,11 @@ ui <- dashboardPage(
                 ),
                 column(8,
                        fluidRow(
-                         column(6, div(class = "metric-card", 
+                         column(4, div(class = "metric-card", 
                                        h4("Total Medals"), h2(textOutput("sport_medals", inline = TRUE)))),
-                         column(6, div(class = "metric-card", 
+                         column(4, div(class = "metric-card", 
+                                       h4("Athletes"), h2(textOutput("sport_athletes", inline = TRUE)))),
+                         column(4, div(class = "metric-card", 
                                        h4("Countries"), h2(textOutput("sport_countries", inline = TRUE))))
                        )
                 )
