@@ -43,16 +43,15 @@ library(randomForest)
     ),
     
     dashboardSidebar(
-      width = 280,
+      width = 300,
       sidebarMenu(
         id = "tabs",
         menuItem("Home", tabName = "home", icon = icon("home")),
-        menuItem("Stadium Map", tabName = "analytics", icon = icon("map-marker-alt")),
-        menuItem("Betting Analysis", tabName = "betting_analysis", icon = icon("chart-bar")),
-        menuItem("ROI Calculator", tabName = "roi_calculator", icon = icon("calculator")),
-        menuItem("Game Predictor", tabName = "game_predictor", icon = icon("brain")),
-        menuItem("Cluster Analysis", tabName = "cluster_analysis", icon = icon("project-diagram")),
-        menuItem("My Betting Library", tabName = "betting_library", icon = icon("book"))
+        menuItem("Dashboard", tabName = "dashboard", icon = icon("medal")),
+        menuItem("Athletes", tabName = "athletes", icon = icon("user")),
+        menuItem("Countries", tabName = "countries", icon = icon("flag")),
+        menuItem("Sports", tabName = "sports", icon = icon("running")),
+        menuItem("Data Explorer", tabName = "explorer", icon = icon("table")),
       )
     )
   )
