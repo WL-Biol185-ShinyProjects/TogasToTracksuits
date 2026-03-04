@@ -8,16 +8,6 @@ library(htmltools)
 library(DT)
 library(readxl)
 
-library(shiny)
-library(shinydashboard)
-library(leaflet)
-library(dplyr)
-library(tidyverse)
-library(plotly)
-library(htmltools)
-library(DT)
-library(readxl)
-
 # Olympic countries list
 olympic_countries <- c(
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", 
