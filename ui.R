@@ -33,13 +33,13 @@ library(randomForest)
   )
   
   ui <- dashboardPage(
-    skin = "blue",
+    skin = "red",
     dashboardHeader(
       title = span(
-        icon("football-ball", style = "margin-right: 10px;"),
-        "NFL Analytics Pro"
+        icon("medal", style = "margin-right: 10px;"),
+        "Olympic Analytics"
       ),
-      titleWidth = 280
+      titleWidth = 300
     ),
     
     dashboardSidebar(
@@ -54,5 +54,6 @@ library(randomForest)
         menuItem("Cluster Analysis", tabName = "cluster_analysis", icon = icon("project-diagram")),
         menuItem("My Betting Library", tabName = "betting_library", icon = icon("book"))
       )
-    ),
+    )
+  )
     
