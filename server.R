@@ -1,7 +1,82 @@
 library(shiny)
+library(shinydashboard)
+library(dplyr)
+library(tidyverse)
+library(plotly)
+library(DT)
+library(readxl)
+
+# ============================================================
+# LOAD & CLEAN DATA
+# ============================================================
+olympic_data <- read_excel("athlete_events-Olympic_Dataset.xlsx") %>%
+  mutate(
+    Medal = ifelse(Medal == "NA" | is.na(Medal), NA, Medal),
+    Age    = suppressWarnings(as.numeric(ifelse(Age    == "NA", NA, Age))),
+    Height = suppressWarnings(as.numeric(ifelse(Height == "NA", NA, Height))),
+    Weight = suppressWarnings(as.numeric(ifelse(Weight == "NA", NA, Weight))),
+    Year   = as.integer(Year)
+  )
+
+medal_data <- olympic_data %>% filter(!is.na(Medal))
+
+# Colour palette (consistent across charts)
+GOLD   <- "#FFD700"
+SILVER <- "#C0C0C0"
+BRONZE <- "#CD7F32"
+BLUE   <- "#0085C7"
+NAVY   <- "#005A8C"
+
+medal_colors <- c(Gold = GOLD, Silver = SILVER, Bronze = BRONZE)
+
+# ============================================================
+# SERVER
+# ============================================================
+server <- function(input, output, session) {
   
-function(input, output, session) {
+  # ── Populate dynamic dropdowns ──────────────────────────
+  observe({
+    athletes <- sort(unique(olympic_data$Name))
+    updateSelectInput(session, "athlete_search",
+                      choices  = athletes,
+                      selected = athletes[1])
+  })
+  
+  observe({
+    sports <- sort(unique(olympic_data$Sport))
+    updateSelectInput(session, "sport_select",
+                      choices  = sports,
+                      selected = sports[1])
+    updateSelectInput(session, "explorer_sport",
+                      choices  = c("All" = "all", sports),
+                      selected = "all")
+  })
+  
+  observe({
+    countries <- sort(unique(olympic_data$Team))
+    updateSelectInput(session, "explorer_country",
+                      choices  = c("All" = "all", countries),
+                      selected = "all")
+  })
+  
+  observe({
+    years <- sort(unique(olympic_data$Year))
+    updateSelectInput(session, "explorer_year",
+                      choices  = c("All" = "all", years),
+                      selected = "all")
+  })
+  
+  # ============================================================
+  # DASHBOARD TAB
+  # ============================================================
+  
+  # Medal distribution pie
+  output$medal_pie_chart <- renderPlotly({
+    counts <- medal_data %>%
+      count(Medal) %>%
+      mutate(Medal = factor(Medal, levels = c("Gold","Silver","Bronze")))
     
+<<<<<<< HEAD
     # ========== LOAD AND PROCESS DATA ==========
     olympic_data <- reactive({
       df <- read_excel("athlete_events-Olympic Dataset.xlsx")
@@ -31,539 +106,350 @@ function(input, output, session) {
       
       return(df)
     })
+=======
+    plot_ly(counts, labels = ~Medal, values = ~n,
+            type   = "pie",
+            marker = list(colors = c(GOLD, SILVER, BRONZE),
+                          line   = list(color = "white", width = 2)),
+            textinfo      = "label+percent",
+            hovertemplate = "%{label}: %{value:,}<extra></extra>") %>%
+      layout(showlegend = TRUE,
+             paper_bgcolor = "rgba(0,0,0,0)",
+             plot_bgcolor  = "rgba(0,0,0,0)",
+             font = list(family = "Poppins"))
+  })
+  
+  # Medals over time line chart
+  output$medals_timeline <- renderPlotly({
+    timeline <- medal_data %>%
+      count(Year, Medal) %>%
+      mutate(Medal = factor(Medal, levels = c("Gold","Silver","Bronze")))
+>>>>>>> 8bcc5605cf36db4a090bceae0ed751a1110b2cfa
     
-    # ========== DASHBOARD TAB ==========
+    plot_ly(timeline, x = ~Year, y = ~n, color = ~Medal,
+            colors = medal_colors,
+            type = "scatter", mode = "lines+markers",
+            line    = list(width = 3),
+            marker  = list(size = 6),
+            hovertemplate = "%{x}: %{y:,} medals<extra>%{fullData.name}</extra>") %>%
+      layout(xaxis = list(title = "Year"),
+             yaxis = list(title = "Medals Awarded"),
+             legend = list(orientation = "h", y = -0.2),
+             paper_bgcolor = "rgba(0,0,0,0)",
+             plot_bgcolor  = "rgba(0,0,0,0)",
+             font = list(family = "Poppins"))
+  })
+  
+  # Top 10 countries bar
+  output$top_countries_bar <- renderPlotly({
+    top <- medal_data %>%
+      count(Team, name = "Medals") %>%
+      slice_max(Medals, n = 10) %>%
+      arrange(Medals)
     
-    # Medal Distribution Pie Chart
-    output$medal_pie_chart <- renderPlotly({
-      df <- olympic_data()
-      
-      medal_counts <- df %>%
-        filter(!is.na(Medal)) %>%
-        group_by(Medal) %>%
-        summarise(count = n(), .groups = "drop")
-      
-      plot_ly(medal_counts, 
-              labels = ~Medal, 
-              values = ~count,
-              type = 'pie',
-              marker = list(colors = c('#CD7F32', '#FFD700', '#C0C0C0')),
-              textinfo = 'label+percent',
-              hoverinfo = 'text',
-              text = ~paste0(Medal, ': ', formatC(count, format="d", big.mark=","))) %>%
-        layout(title = "",
-               showlegend = TRUE,
-               paper_bgcolor = 'rgba(0,0,0,0)',
-               plot_bgcolor = 'rgba(0,0,0,0)')
-    })
+    plot_ly(top, x = ~Medals, y = ~reorder(Team, Medals),
+            type = "bar", orientation = "h",
+            marker = list(color = BLUE,
+                          line  = list(color = NAVY, width = 1)),
+            hovertemplate = "%{y}: %{x:,} medals<extra></extra>") %>%
+      layout(xaxis = list(title = "Total Medals"),
+             yaxis = list(title = ""),
+             paper_bgcolor = "rgba(0,0,0,0)",
+             plot_bgcolor  = "rgba(0,0,0,0)",
+             font = list(family = "Poppins"))
+  })
+  
+  # Top 10 athletes bar
+  output$top_athletes_bar <- renderPlotly({
+    top <- medal_data %>%
+      count(Name, name = "Medals") %>%
+      slice_max(Medals, n = 10) %>%
+      arrange(Medals)
     
-    # Medals Over Time
-    output$medals_timeline <- renderPlotly({
-      df <- olympic_data()
-      
-      timeline <- df %>%
-        filter(!is.na(Medal)) %>%
-        group_by(Year) %>%
-        summarise(total_medals = n(), .groups = "drop")
-      
-      plot_ly(timeline, 
-              x = ~Year, 
-              y = ~total_medals,
-              type = 'scatter',
-              mode = 'lines+markers',
-              line = list(color = '#0085C7', width = 3),
-              marker = list(color = '#FFD700', size = 6),
-              hovertemplate = paste0(
-                '<b>Year:</b> %{x}<br>',
-                '<b>Medals:</b> %{y:,}<br>',
-                '<extra></extra>'
-              )) %>%
-        layout(
-          xaxis = list(title = "Year"),
-          yaxis = list(title = "Total Medals Awarded"),
-          hovermode = 'closest',
-          paper_bgcolor = 'rgba(0,0,0,0)',
-          plot_bgcolor = 'rgba(0,0,0,0)'
-        )
-    })
+    plot_ly(top, x = ~Medals, y = ~reorder(Name, Medals),
+            type = "bar", orientation = "h",
+            marker = list(color = GOLD,
+                          line  = list(color = "#B8860B", width = 1)),
+            hovertemplate = "%{y}: %{x:,} medals<extra></extra>") %>%
+      layout(xaxis = list(title = "Total Medals"),
+             yaxis = list(title = ""),
+             paper_bgcolor = "rgba(0,0,0,0)",
+             plot_bgcolor  = "rgba(0,0,0,0)",
+             font = list(family = "Poppins"))
+  })
+  
+  # ============================================================
+  # ATHLETES TAB
+  # ============================================================
+  
+  athlete_data <- reactive({
+    req(input$athlete_search)
+    olympic_data %>% filter(Name == input$athlete_search)
+  })
+  
+  athlete_medals <- reactive({
+    athlete_data() %>% filter(!is.na(Medal))
+  })
+  
+  # Profile display
+  output$athlete_profile_display <- renderUI({
+    d <- athlete_data()
+    if (nrow(d) == 0) return(p("No data found."))
     
-    # Top 10 Countries
-    output$top_countries_bar <- renderPlotly({
-      df <- olympic_data()
-      
-      top_countries <- df %>%
-        filter(!is.na(Medal)) %>%
-        group_by(Team) %>%
-        summarise(total_medals = n(), .groups = "drop") %>%
-        arrange(desc(total_medals)) %>%
-        head(10)
-      
-      plot_ly(top_countries,
-              x = ~reorder(Team, total_medals),
-              y = ~total_medals,
-              type = 'bar',
-              marker = list(color = '#0085C7',
-                            line = list(color = '#FFD700', width = 2)),
-              text = ~formatC(total_medals, format="d", big.mark=","),
-              textposition = 'outside',
-              hovertemplate = paste0(
-                '<b>%{x}</b><br>',
-                'Medals: %{y:,}<br>',
-                '<extra></extra>'
-              )) %>%
-        layout(
-          xaxis = list(title = "Country", tickangle = -45),
-          yaxis = list(title = "Total Medals"),
-          margin = list(b = 100),
-          paper_bgcolor = 'rgba(0,0,0,0)',
-          plot_bgcolor = 'rgba(0,0,0,0)'
-        )
-    })
+    age    <- ifelse(all(is.na(d$Age)),    "N/A", paste0(round(mean(d$Age,    na.rm=TRUE)), " yrs"))
+    height <- ifelse(all(is.na(d$Height)), "N/A", paste0(round(mean(d$Height, na.rm=TRUE)), " cm"))
+    weight <- ifelse(all(is.na(d$Weight)), "N/A", paste0(round(mean(d$Weight, na.rm=TRUE)), " kg"))
+    sex    <- ifelse(d$Sex[1] == "M", "Male", "Female")
+    sports <- paste(unique(d$Sport), collapse = ", ")
+    teams  <- paste(unique(d$Team),  collapse = ", ")
+    years  <- paste(range(d$Year), collapse = " – ")
     
-    # Top 10 Athletes
-    output$top_athletes_bar <- renderPlotly({
-      df <- olympic_data()
-      
-      top_athletes <- df %>%
-        filter(!is.na(Medal)) %>%
-        group_by(Name) %>%
-        summarise(total_medals = n(), .groups = "drop") %>%
-        arrange(desc(total_medals)) %>%
-        head(10)
-      
-      plot_ly(top_athletes,
-              x = ~reorder(Name, total_medals),
-              y = ~total_medals,
-              type = 'bar',
-              marker = list(color = '#FFD700',
-                            line = list(color = '#0085C7', width = 2)),
-              text = ~total_medals,
-              textposition = 'outside',
-              hovertemplate = paste0(
-                '<b>%{x}</b><br>',
-                'Medals: %{y}<br>',
-                '<extra></extra>'
-              )) %>%
-        layout(
-          xaxis = list(title = "Athlete", tickangle = -45),
-          yaxis = list(title = "Total Medals"),
-          margin = list(b = 150),
-          paper_bgcolor = 'rgba(0,0,0,0)',
-          plot_bgcolor = 'rgba(0,0,0,0)'
-        )
-    })
-    
-    # ========== ATHLETES TAB ==========
-    
-    # Populate athlete dropdown
-    observe({
-      df <- olympic_data()
-      
-      athletes <- df %>%
-        filter(!is.na(Medal)) %>%
-        distinct(Name) %>%
-        arrange(Name) %>%
-        pull(Name)
-      
-      updateSelectInput(session, "athlete_search",
-                        choices = athletes,
-                        selected = "Michael Fred Phelps, II")
-    })
-    
-    # Athlete Profile Display
-    output$athlete_profile_display <- renderUI({
-      req(input$athlete_search)
-      df <- olympic_data()
-      
-      athlete_data <- df %>%
-        filter(Name == input$athlete_search) %>%
-        slice(1)
-      
-      if(nrow(athlete_data) == 0) {
-        return(p("No data available for this athlete."))
-      }
-      
-      tagList(
-        fluidRow(
-          column(6,
-                 p(strong("Name:"), athlete_data$Name),
-                 p(strong("Sex:"), athlete_data$Sex),
-                 p(strong("Age (at first Olympics):"), ifelse(is.na(athlete_data$Age), "Unknown", athlete_data$Age))
-          ),
-          column(6,
-                 p(strong("Height:"), ifelse(is.na(athlete_data$Height), "Unknown", paste0(athlete_data$Height, " cm"))),
-                 p(strong("Weight:"), ifelse(is.na(athlete_data$Weight), "Unknown", paste0(athlete_data$Weight, " kg"))),
-                 p(strong("Team:"), athlete_data$Team)
-          )
-        )
-      )
-    })
-    
-    # Athlete Medal Counts
-    output$athlete_total_medals <- renderText({
-      req(input$athlete_search)
-      df <- olympic_data()
-      
-      total <- df %>%
-        filter(Name == input$athlete_search, !is.na(Medal)) %>%
-        nrow()
-      
-      formatC(total, format="d", big.mark=",")
-    })
-    
-    output$athlete_gold <- renderText({
-      req(input$athlete_search)
-      df <- olympic_data()
-      
-      gold <- df %>%
-        filter(Name == input$athlete_search, Medal == "Gold") %>%
-        nrow()
-      
-      formatC(gold, format="d", big.mark=",")
-    })
-    
-    output$athlete_silver <- renderText({
-      req(input$athlete_search)
-      df <- olympic_data()
-      
-      silver <- df %>%
-        filter(Name == input$athlete_search, Medal == "Silver") %>%
-        nrow()
-      
-      formatC(silver, format="d", big.mark=",")
-    })
-    
-    output$athlete_bronze <- renderText({
-      req(input$athlete_search)
-      df <- olympic_data()
-      
-      bronze <- df %>%
-        filter(Name == input$athlete_search, Medal == "Bronze") %>%
-        nrow()
-      
-      formatC(bronze, format="d", big.mark=",")
-    })
-    
-    # Athlete Timeline
-    output$athlete_timeline <- renderPlotly({
-      req(input$athlete_search)
-      df <- olympic_data()
-      
-      medals <- df %>%
-        filter(Name == input$athlete_search, !is.na(Medal)) %>%
-        group_by(Year, Medal) %>%
-        summarise(count = n(), .groups = "drop")
-      
-      if(nrow(medals) == 0) {
-        return(plot_ly() %>% layout(title = "No medal data available"))
-      }
-      
-      plot_ly(medals, 
-              x = ~Year, 
-              y = ~count, 
-              color = ~Medal,
-              colors = c("Gold" = "#FFD700", "Silver" = "#C0C0C0", "Bronze" = "#CD7F32"),
-              type = 'bar',
-              text = ~count,
-              textposition = 'outside') %>%
-        layout(
-          barmode = 'stack',
-          xaxis = list(title = "Year"),
-          yaxis = list(title = "Medals Won"),
-          hovermode = 'closest',
-          paper_bgcolor = 'rgba(0,0,0,0)',
-          plot_bgcolor = 'rgba(0,0,0,0)'
-        )
-    })
-    
-    # Athlete Record Table
-    output$athlete_record_table <- DT::renderDataTable({
-      req(input$athlete_search)
-      df <- olympic_data()
-      
-      records <- df %>%
-        filter(Name == input$athlete_search) %>%
-        select(Year, Season, City, Sport, Event, Medal) %>%
-        arrange(desc(Year))
-      
-      DT::datatable(
-        records,
-        options = list(
-          pageLength = 10,
-          scrollX = TRUE,
-          searching = TRUE,
-          ordering = TRUE
-        ),
-        rownames = FALSE
-      )
-    })
-    
-    # ========== COUNTRIES TAB ==========
-    
-    # Country Comparison Bar Chart
-    output$country_comparison <- renderPlotly({
-      req(input$country1, input$country2)
-      df <- olympic_data()
-      
-      country1_data <- df %>%
-        filter(Team == input$country1, !is.na(Medal)) %>%
-        group_by(Medal) %>%
-        summarise(count = n(), .groups = "drop") %>%
-        mutate(Country = input$country1)
-      
-      country2_data <- df %>%
-        filter(Team == input$country2, !is.na(Medal)) %>%
-        group_by(Medal) %>%
-        summarise(count = n(), .groups = "drop") %>%
-        mutate(Country = input$country2)
-      
-      comparison <- bind_rows(country1_data, country2_data)
-      
-      if(nrow(comparison) == 0) {
-        return(plot_ly() %>% layout(title = "No data for selected countries"))
-      }
-      
-      plot_ly(comparison, 
-              x = ~Medal, 
-              y = ~count, 
-              color = ~Country,
-              type = 'bar',
-              colors = c('#0085C7', '#FFD700'),
-              text = ~count,
-              textposition = 'outside') %>%
-        layout(
-          barmode = 'group',
-          xaxis = list(title = "Medal Type"),
-          yaxis = list(title = "Count"),
-          hovermode = 'closest',
-          paper_bgcolor = 'rgba(0,0,0,0)',
-          plot_bgcolor = 'rgba(0,0,0,0)'
-        )
-    })
-    
-    # Country Timeline
-    output$country_timeline <- renderPlotly({
-      req(input$country1, input$country2)
-      df <- olympic_data()
-      
-      country1_timeline <- df %>%
-        filter(Team == input$country1, !is.na(Medal)) %>%
-        group_by(Year) %>%
-        summarise(medals = n(), .groups = "drop") %>%
-        mutate(Country = input$country1)
-      
-      country2_timeline <- df %>%
-        filter(Team == input$country2, !is.na(Medal)) %>%
-        group_by(Year) %>%
-        summarise(medals = n(), .groups = "drop") %>%
-        mutate(Country = input$country2)
-      
-      timeline <- bind_rows(country1_timeline, country2_timeline)
-      
-      if(nrow(timeline) == 0) {
-        return(plot_ly() %>% layout(title = "No timeline data available"))
-      }
-      
-      plot_ly(timeline, 
-              x = ~Year, 
-              y = ~medals, 
-              color = ~Country,
-              colors = c('#0085C7', '#FFD700'),
-              type = 'scatter',
-              mode = 'lines+markers',
-              line = list(width = 3),
-              marker = list(size = 6)) %>%
-        layout(
-          xaxis = list(title = "Year"),
-          yaxis = list(title = "Medals Won"),
-          hovermode = 'closest',
-          paper_bgcolor = 'rgba(0,0,0,0)',
-          plot_bgcolor = 'rgba(0,0,0,0)'
-        )
-    })
-    
-    # ========== SPORTS TAB ==========
-    
-    # Populate sport dropdown
-    observe({
-      df <- olympic_data()
-      
-      sports <- df %>%
-        distinct(Sport) %>%
-        arrange(Sport) %>%
-        pull(Sport)
-      
-      updateSelectInput(session, "sport_select",
-                        choices = sports,
-                        selected = "Swimming")
-    })
-    
-    # Sport Metrics
-    output$sport_medals <- renderText({
-      req(input$sport_select)
-      df <- olympic_data()
-      
-      total <- df %>%
-        filter(Sport == input$sport_select, !is.na(Medal)) %>%
-        nrow()
-      
-      formatC(total, format="d", big.mark=",")
-    })
-    
-    output$sport_athletes <- renderText({
-      req(input$sport_select)
-      df <- olympic_data()
-      
-      athletes <- df %>%
-        filter(Sport == input$sport_select) %>%
-        distinct(Name) %>%
-        nrow()
-      
-      formatC(athletes, format="d", big.mark=",")
-    })
-    
-    output$sport_countries <- renderText({
-      req(input$sport_select)
-      df <- olympic_data()
-      
-      countries <- df %>%
-        filter(Sport == input$sport_select) %>%
-        distinct(Team) %>%
-        nrow()
-      
-      formatC(countries, format="d", big.mark=",")
-    })
-    
-    # Sport Top Countries
-    output$sport_top_countries <- renderPlotly({
-      req(input$sport_select)
-      df <- olympic_data()
-      
-      top_countries <- df %>%
-        filter(Sport == input$sport_select, !is.na(Medal)) %>%
-        group_by(Team) %>%
-        summarise(medals = n(), .groups = "drop") %>%
-        arrange(desc(medals)) %>%
-        head(10)
-      
-      if(nrow(top_countries) == 0) {
-        return(plot_ly() %>% layout(title = "No data available"))
-      }
-      
-      plot_ly(top_countries,
-              x = ~reorder(Team, medals),
-              y = ~medals,
-              type = 'bar',
-              marker = list(color = '#0085C7'),
-              text = ~medals,
-              textposition = 'outside') %>%
-        layout(
-          xaxis = list(title = "Country", tickangle = -45),
-          yaxis = list(title = "Medals"),
-          margin = list(b = 100),
-          paper_bgcolor = 'rgba(0,0,0,0)',
-          plot_bgcolor = 'rgba(0,0,0,0)'
-        )
-    })
-    
-    # Sport Top Athletes
-    output$sport_top_athletes <- renderPlotly({
-      req(input$sport_select)
-      df <- olympic_data()
-      
-      top_athletes <- df %>%
-        filter(Sport == input$sport_select, !is.na(Medal)) %>%
-        group_by(Name) %>%
-        summarise(medals = n(), .groups = "drop") %>%
-        arrange(desc(medals)) %>%
-        head(10)
-      
-      if(nrow(top_athletes) == 0) {
-        return(plot_ly() %>% layout(title = "No data available"))
-      }
-      
-      plot_ly(top_athletes,
-              x = ~reorder(Name, medals),
-              y = ~medals,
-              type = 'bar',
-              marker = list(color = '#FFD700'),
-              text = ~medals,
-              textposition = 'outside') %>%
-        layout(
-          xaxis = list(title = "Athlete", tickangle = -45),
-          yaxis = list(title = "Medals"),
-          margin = list(b = 150),
-          paper_bgcolor = 'rgba(0,0,0,0)',
-          plot_bgcolor = 'rgba(0,0,0,0)'
-        )
-    })
-    
-    # ========== DATA EXPLORER TAB ==========
-    
-    # Populate filter dropdowns
-    observe({
-      df <- olympic_data()
-      
-      sports <- c("All", sort(unique(df$Sport)))
-      countries <- c("All", sort(unique(df$Team)))
-      years <- c("All", sort(unique(df$Year), decreasing = TRUE))
-      
-      updateSelectInput(session, "explorer_sport", choices = sports)
-      updateSelectInput(session, "explorer_country", choices = countries)
-      updateSelectInput(session, "explorer_year", choices = years)
-    })
-    
-    # Filtered data for explorer
-    explorer_filtered_data <- reactive({
-      df <- olympic_data()
-      
-      if(input$explorer_sport != "All") {
-        df <- df %>% filter(Sport == input$explorer_sport)
-      }
-      
-      if(input$explorer_country != "All") {
-        df <- df %>% filter(Team == input$explorer_country)
-      }
-      
-      if(input$explorer_year != "All") {
-        df <- df %>% filter(Year == as.numeric(input$explorer_year))
-      }
-      
-      if(input$explorer_medal != "all") {
-        df <- df %>% filter(Medal == input$explorer_medal)
-      }
-      
-      return(df)
-    })
-    
-    # Explorer Table
-    output$explorer_table <- DT::renderDataTable({
-      data <- explorer_filtered_data() %>%
-        select(Name, Sex, Age, Height, Weight, Team, NOC, Year, Season, City, Sport, Event, Medal)
-      
-      DT::datatable(
-        data,
-        options = list(
-          pageLength = 25,
-          scrollX = TRUE,
-          searching = TRUE,
-          ordering = TRUE,
-          order = list(list(7, 'desc'))  # Sort by Year descending
-        ),
-        rownames = FALSE,
-        filter = 'top'
-      )
-    })
-    
-    # Download Handler
-    output$download_data <- downloadHandler(
-      filename = function() {
-        paste0("olympic_data_", Sys.Date(), ".csv")
-      },
-      content = function(file) {
-        data <- explorer_filtered_data() %>%
-          select(Name, Sex, Age, Height, Weight, Team, NOC, Year, Season, City, Sport, Event, Medal)
-        write.csv(data, file, row.names = FALSE)
-      }
+    tags$div(
+      style = "padding: 10px;",
+      tags$h3(style = "color: #0085C7; margin-bottom: 5px;", input$athlete_search),
+      tags$p(style = "color: #7F8C8D; font-size: 15px; margin-bottom: 20px;",
+             icon("flag"), " ", teams),
+      fluidRow(
+        column(4, tags$div(style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;",
+                           tags$small(style="color:#7F8C8D; text-transform:uppercase; font-weight:600;","Sex"),
+                           tags$br(), tags$strong(style="font-size:18px;", sex))),
+        column(4, tags$div(style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;",
+                           tags$small(style="color:#7F8C8D; text-transform:uppercase; font-weight:600;","Age"),
+                           tags$br(), tags$strong(style="font-size:18px;", age))),
+        column(4, tags$div(style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;",
+                           tags$small(style="color:#7F8C8D; text-transform:uppercase; font-weight:600;","Years Active"),
+                           tags$br(), tags$strong(style="font-size:18px;", years)))
+      ),
+      tags$br(),
+      fluidRow(
+        column(6, tags$div(style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;",
+                           tags$small(style="color:#7F8C8D; text-transform:uppercase; font-weight:600;","Height"),
+                           tags$br(), tags$strong(style="font-size:18px;", height))),
+        column(6, tags$div(style="text-align:center; padding:10px; background:#f8f9fa; border-radius:8px;",
+                           tags$small(style="color:#7F8C8D; text-transform:uppercase; font-weight:600;","Weight"),
+                           tags$br(), tags$strong(style="font-size:18px;", weight)))
+      ),
+      tags$br(),
+      tags$p(tags$strong("Sports: "), sports)
     )
-  }
+  })
+  
+  # Medal summary cards
+  output$athlete_total_medals <- renderText({
+    nrow(athlete_medals())
+  })
+  output$athlete_gold <- renderText({
+    sum(athlete_medals()$Medal == "Gold",   na.rm = TRUE)
+  })
+  output$athlete_silver <- renderText({
+    sum(athlete_medals()$Medal == "Silver", na.rm = TRUE)
+  })
+  output$athlete_bronze <- renderText({
+    sum(athlete_medals()$Medal == "Bronze", na.rm = TRUE)
+  })
+  
+  # Athlete medal timeline
+  output$athlete_timeline <- renderPlotly({
+    m <- athlete_medals()
+    if (nrow(m) == 0) {
+      return(plot_ly() %>%
+               layout(title = "No medals recorded for this athlete",
+                      paper_bgcolor = "rgba(0,0,0,0)"))
+    }
+    
+    timeline <- m %>%
+      count(Year, Medal) %>%
+      mutate(Medal = factor(Medal, levels = c("Gold","Silver","Bronze")))
+    
+    plot_ly(timeline, x = ~Year, y = ~n, color = ~Medal,
+            colors  = medal_colors,
+            type    = "bar",
+            hovertemplate = "%{x}: %{y} medal(s)<extra>%{fullData.name}</extra>") %>%
+      layout(barmode = "stack",
+             xaxis   = list(title = "Year", dtick = 4),
+             yaxis   = list(title = "Medals"),
+             paper_bgcolor = "rgba(0,0,0,0)",
+             plot_bgcolor  = "rgba(0,0,0,0)",
+             font = list(family = "Poppins"))
+  })
+  
+  # Athlete complete record table
+  output$athlete_record_table <- DT::renderDataTable({
+    d <- athlete_data() %>%
+      select(Year, Games, Sport, Event, Medal, Team) %>%
+      arrange(Year)
+    
+    DT::datatable(d,
+                  options = list(pageLength = 15, scrollX = TRUE,
+                                 dom = "Bfrtip"),
+                  rownames = FALSE) %>%
+      formatStyle("Medal",
+                  backgroundColor = styleEqual(
+                    c("Gold","Silver","Bronze"),
+                    c(GOLD,  SILVER,  BRONZE)))
+  })
+  
+  # ============================================================
+  # COUNTRIES TAB
+  # ============================================================
+  
+  country1_data <- reactive({
+    req(input$country1)
+    medal_data %>% filter(Team == input$country1)
+  })
+  
+  country2_data <- reactive({
+    req(input$country2)
+    medal_data %>% filter(Team == input$country2)
+  })
+  
+  # Side-by-side medal bar comparison
+  output$country_comparison <- renderPlotly({
+    summarise_country <- function(d, name) {
+      d %>% count(Medal) %>% mutate(Country = name)
+    }
+    
+    comp <- bind_rows(
+      summarise_country(country1_data(), input$country1),
+      summarise_country(country2_data(), input$country2)
+    ) %>%
+      mutate(Medal = factor(Medal, levels = c("Gold","Silver","Bronze")))
+    
+    plot_ly(comp, x = ~Medal, y = ~n, color = ~Country,
+            type = "bar",
+            colors = c(BLUE, "#EE334E"),
+            hovertemplate = "%{x}: %{y:,} medals<extra>%{fullData.name}</extra>") %>%
+      layout(barmode = "group",
+             xaxis   = list(title = "Medal Type"),
+             yaxis   = list(title = "Count"),
+             legend  = list(orientation = "h", y = -0.2),
+             paper_bgcolor = "rgba(0,0,0,0)",
+             plot_bgcolor  = "rgba(0,0,0,0)",
+             font = list(family = "Poppins"))
+  })
+  
+  # Countries performance over time
+  output$country_timeline <- renderPlotly({
+    c1 <- country1_data() %>% count(Year, name = "Medals") %>% mutate(Country = input$country1)
+    c2 <- country2_data() %>% count(Year, name = "Medals") %>% mutate(Country = input$country2)
+    
+    timeline <- bind_rows(c1, c2)
+    
+    plot_ly(timeline, x = ~Year, y = ~Medals, color = ~Country,
+            type   = "scatter", mode = "lines+markers",
+            colors = c(BLUE, "#EE334E"),
+            line   = list(width = 3),
+            marker = list(size = 7),
+            hovertemplate = "%{x}: %{y:,} medals<extra>%{fullData.name}</extra>") %>%
+      layout(xaxis = list(title = "Year"),
+             yaxis = list(title = "Total Medals"),
+             legend = list(orientation = "h", y = -0.2),
+             paper_bgcolor = "rgba(0,0,0,0)",
+             plot_bgcolor  = "rgba(0,0,0,0)",
+             font = list(family = "Poppins"))
+  })
+  
+  # ============================================================
+  # SPORTS TAB
+  # ============================================================
+  
+  sport_data <- reactive({
+    req(input$sport_select)
+    medal_data %>% filter(Sport == input$sport_select)
+  })
+  
+  sport_all <- reactive({
+    req(input$sport_select)
+    olympic_data %>% filter(Sport == input$sport_select)
+  })
+  
+  output$sport_medals <- renderText({
+    format(nrow(sport_data()), big.mark = ",")
+  })
+  output$sport_athletes <- renderText({
+    format(n_distinct(sport_all()$Name), big.mark = ",")
+  })
+  output$sport_countries <- renderText({
+    format(n_distinct(sport_all()$Team), big.mark = ",")
+  })
+  
+  # Top countries for sport
+  output$sport_top_countries <- renderPlotly({
+    top <- sport_data() %>%
+      count(Team, name = "Medals") %>%
+      slice_max(Medals, n = 10) %>%
+      arrange(Medals)
+    
+    plot_ly(top, x = ~Medals, y = ~reorder(Team, Medals),
+            type = "bar", orientation = "h",
+            marker = list(color = BLUE,
+                          line  = list(color = NAVY, width = 1)),
+            hovertemplate = "%{y}: %{x:,} medals<extra></extra>") %>%
+      layout(xaxis = list(title = "Medals"),
+             yaxis = list(title = ""),
+             paper_bgcolor = "rgba(0,0,0,0)",
+             plot_bgcolor  = "rgba(0,0,0,0)",
+             font = list(family = "Poppins"))
+  })
+  
+  # Top athletes for sport
+  output$sport_top_athletes <- renderPlotly({
+    top <- sport_data() %>%
+      count(Name, name = "Medals") %>%
+      slice_max(Medals, n = 10) %>%
+      arrange(Medals)
+    
+    plot_ly(top, x = ~Medals, y = ~reorder(Name, Medals),
+            type = "bar", orientation = "h",
+            marker = list(color = GOLD,
+                          line  = list(color = "#B8860B", width = 1)),
+            hovertemplate = "%{y}: %{x:,} medals<extra></extra>") %>%
+      layout(xaxis = list(title = "Medals"),
+             yaxis = list(title = ""),
+             paper_bgcolor = "rgba(0,0,0,0)",
+             plot_bgcolor  = "rgba(0,0,0,0)",
+             font = list(family = "Poppins"))
+  })
+  
+  # ============================================================
+  # DATA EXPLORER TAB
+  # ============================================================
+  
+  explorer_filtered <- reactive({
+    d <- olympic_data %>%
+      select(Year, Name, Sex, Age, Team, NOC, Games, Season, Sport, Event, Medal)
+    
+    if (input$explorer_sport   != "all") d <- d %>% filter(Sport == input$explorer_sport)
+    if (input$explorer_country != "all") d <- d %>% filter(Team  == input$explorer_country)
+    if (input$explorer_year    != "all") d <- d %>% filter(Year  == as.integer(input$explorer_year))
+    if (input$explorer_medal   != "all") d <- d %>% filter(Medal == input$explorer_medal)
+    
+    d
+  })
+  
+  output$explorer_table <- DT::renderDataTable({
+    DT::datatable(explorer_filtered(),
+                  options = list(
+                    pageLength = 20,
+                    scrollX    = TRUE,
+                    dom        = "Bfrtip",
+                    buttons    = c("copy","csv","excel")
+                  ),
+                  filter   = "top",
+                  rownames = FALSE) %>%
+      formatStyle("Medal",
+                  backgroundColor = styleEqual(
+                    c("Gold","Silver","Bronze"),
+                    c(GOLD,  SILVER,  BRONZE)))
+  })
+  
+  # Download handler
+  output$download_data <- downloadHandler(
+    filename = function() {
+      paste0("olympic_data_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      write.csv(explorer_filtered(), file, row.names = FALSE)
+    }
+  )
+}
