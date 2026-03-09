@@ -60,5 +60,5 @@ function(input, output, session) {
     # Filter inputs (sport, country, year, medal)
     # Download handler for filtered data
     
-    
+
 }
