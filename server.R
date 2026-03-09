@@ -4,7 +4,7 @@ function(input, output, session) {
     
     # ========== LOAD AND PROCESS DATA ==========
     olympic_data <- reactive({
-      df <- read_excel("athlete_events-Olympic_Dataset.xlsx")
+      df <- read_excel("athlete_events-Olympic Dataset.xlsx")
       
       # Add calculated fields
       df <- df %>%
