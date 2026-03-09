@@ -53,7 +53,7 @@ ui <- dashboardPage(
   dashboardHeader(
     title = span(
       icon("medal", style = "margin-right: 10px; color: #FFD700;"),
-      "From Togas to Tracksuits"
+      "Olympic Analytics"
     ),
     titleWidth = 300
   ),
