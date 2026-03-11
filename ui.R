@@ -440,13 +440,13 @@ ui <- dashboardPage(
               fluidRow(
                 column(6,
                        box(width = NULL, solidHeader = TRUE,
-                           title = "Medal Distribution",
-                           plotlyOutput("medal_pie_chart", height = "350px"))
+                           title = "Age Distribution of Medal Winners",
+                           plotlyOutput("age_distribution", height = "350px"))
                 ),
                 column(6,
                        box(width = NULL, solidHeader = TRUE,
-                           title = "Medals Over Time",
-                           plotlyOutput("medals_timeline", height = "350px"))
+                           title = "Summer vs Winter Medal Breakdown",
+                           plotlyOutput("summer_winter_breakdown", height = "350px"))
                 )
               ),
               
