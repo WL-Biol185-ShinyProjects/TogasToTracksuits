@@ -305,7 +305,7 @@ function(input, output, session) {
   
   output$sport_medals    <- renderText({ formatC(nrow(sport_medals_df()),         format = "d", big.mark = ",") })
   output$sport_athletes  <- renderText({ formatC(length(unique(sport_df()$Name)), format = "d", big.mark = ",") })
-  output$sport_countries <- renderText({ formatC(length(unique(sport_df()$NOC)),  format = "d", big.mark = ",") })
+  output$sport_countries <- renderText({ formatC(length(unique(sport_df()$Team)),  format = "d", big.mark = ",") })
   
   output$sport_top_countries <- renderPlotly({
     df <- sport_medals_df()
@@ -314,21 +314,21 @@ function(input, output, session) {
       return(plot_ly() %>% layout(title = "No medal data for this sport"))
     }
     
-    top10_noc <- df %>%
+    top10_team <- df %>%
       filter(Medal %in% c("Gold", "Silver", "Bronze")) %>%
-      count(NOC) %>%
+      count(Team) %>%
       arrange(desc(n)) %>%
       head(10) %>%
-      pull(NOC)
+      pull(Team)
     
     plot_data <- df %>%
-      filter(Medal %in% c("Gold", "Silver", "Bronze"), NOC %in% top10_noc) %>%
-      count(NOC, Medal) %>%
-      mutate(NOC = factor(NOC, levels = rev(top10_noc)))
+      filter(Medal %in% c("Gold", "Silver", "Bronze"), Team %in% top10_team) %>%
+      count(Team, Medal) %>%
+      mutate(Team = factor(Team, levels = rev(top10_team)))
     
     colors <- c("Gold" = "#FFD700", "Silver" = "#A8A9AD", "Bronze" = "#CD7F32")
     
-    plot_ly(plot_data, x = ~n, y = ~NOC, color = ~Medal,
+    plot_ly(plot_data, x = ~n, y = ~Team, color = ~Medal,
             colors = colors,
             type = "bar", orientation = "h",
             hoverinfo = "x+y+name") %>%
