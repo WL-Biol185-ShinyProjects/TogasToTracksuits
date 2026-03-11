@@ -91,7 +91,7 @@ function(input, output, session) {
     
     colors <- c("Gold" = "#FFD700", "Silver" = "#A8A9AD", "Bronze" = "#CD7F32")
     
-    plot_ly(top_countries, x = ~n, y = ~NOC, color = ~Medal,
+    plot_ly(top_countries, x = ~n, y = ~Team, color = ~Medal,
             colors = colors,
             type = "bar", orientation = "h",
             hoverinfo = "x+y+name") %>%
