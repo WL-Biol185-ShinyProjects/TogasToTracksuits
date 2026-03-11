@@ -595,42 +595,6 @@ ui <- dashboardPage(
                 )
               )
       ),
-      
-      # ========================================
-      # DATA EXPLORER TAB
-      # ========================================
-      tabItem(tabName = "explorer",
-              h2(icon("table"), " Data Explorer"),
-              
-              fluidRow(
-                column(12,
-                       box(width = NULL, status = "primary", solidHeader = TRUE,
-                           title = "Filter Data",
-                           fluidRow(
-                             column(3, selectInput("explorer_sport", "Sport:", 
-                                                   choices = c("All" = "all"), selected = "all")),
-                             column(3, selectInput("explorer_country", "Country:", 
-                                                   choices = c("All" = "all"), selected = "all")),
-                             column(3, selectInput("explorer_year", "Year:", 
-                                                   choices = c("All" = "all"), selected = "all")),
-                             column(3, selectInput("explorer_medal", "Medal:", 
-                                                   choices = c("All" = "all", "Gold", "Silver", "Bronze"), 
-                                                   selected = "all"))
-                           ),
-                           downloadButton("download_data", "Download Filtered Data", 
-                                          class = "btn-primary", icon = icon("download"))
-                       )
-                )
-              ),
-              
-              fluidRow(
-                column(12,
-                       box(width = NULL, solidHeader = TRUE,
-                           title = "Olympic Dataset",
-                           DT::dataTableOutput("explorer_table"))
-                )
-              )
-      )
     )
   )
 )
