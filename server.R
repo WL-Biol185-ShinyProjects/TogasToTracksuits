@@ -77,17 +77,17 @@ function(input, output, session) {
   })
   
   output$top_countries_bar <- renderPlotly({
-    top10_noc <- medal_data %>%
+    top10_team <- medal_data %>%
       filter(Medal %in% c("Gold", "Silver", "Bronze")) %>%
-      count(NOC) %>%
+      count(Team) %>%
       arrange(desc(n)) %>%
       head(10) %>%
-      pull(NOC)
+      pull(Team)
     
     top_countries <- medal_data %>%
-      filter(Medal %in% c("Gold", "Silver", "Bronze"), NOC %in% top10_noc) %>%
-      count(NOC, Medal) %>%
-      mutate(NOC = factor(NOC, levels = rev(top10_noc)))
+      filter(Medal %in% c("Gold", "Silver", "Bronze"), Team %in% top10_team) %>%
+      count(Team, Medal) %>%
+      mutate(Team = factor(Team, levels = rev(top10_team)))
     
     colors <- c("Gold" = "#FFD700", "Silver" = "#A8A9AD", "Bronze" = "#CD7F32")
     
