@@ -375,6 +375,7 @@ function(input, output, session) {
         plot_bgcolor  = "white"
       )
   })
+
   
   # ===========================================================================
   # DATA EXPLORER TAB
@@ -421,3 +422,4 @@ function(input, output, session) {
   )
 }
  
+

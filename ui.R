@@ -66,8 +66,7 @@ ui <- dashboardPage(
       menuItem("Dashboard", tabName = "dashboard", icon = icon("medal")),
       menuItem("Athletes", tabName = "athletes", icon = icon("user")),
       menuItem("Countries", tabName = "countries", icon = icon("flag")),
-      menuItem("Sports", tabName = "sports", icon = icon("running")),
-      menuItem("Data Explorer", tabName = "explorer", icon = icon("table"))
+      menuItem("Sports", tabName = "sports", icon = icon("running"))
     )
   ),
   
@@ -592,42 +591,6 @@ ui <- dashboardPage(
                        box(width = NULL, solidHeader = TRUE,
                            title = "Top Athletes",
                            plotlyOutput("sport_top_athletes", height = "400px"))
-                )
-              )
-      ),
-      
-      # ========================================
-      # DATA EXPLORER TAB
-      # ========================================
-      tabItem(tabName = "explorer",
-              h2(icon("table"), " Data Explorer"),
-              
-              fluidRow(
-                column(12,
-                       box(width = NULL, status = "primary", solidHeader = TRUE,
-                           title = "Filter Data",
-                           fluidRow(
-                             column(3, selectInput("explorer_sport", "Sport:", 
-                                                   choices = c("All" = "all"), selected = "all")),
-                             column(3, selectInput("explorer_country", "Country:", 
-                                                   choices = c("All" = "all"), selected = "all")),
-                             column(3, selectInput("explorer_year", "Year:", 
-                                                   choices = c("All" = "all"), selected = "all")),
-                             column(3, selectInput("explorer_medal", "Medal:", 
-                                                   choices = c("All" = "all", "Gold", "Silver", "Bronze"), 
-                                                   selected = "all"))
-                           ),
-                           downloadButton("download_data", "Download Filtered Data", 
-                                          class = "btn-primary", icon = icon("download"))
-                       )
-                )
-              ),
-              
-              fluidRow(
-                column(12,
-                       box(width = NULL, solidHeader = TRUE,
-                           title = "Olympic Dataset",
-                           DT::dataTableOutput("explorer_table"))
                 )
               )
       )
