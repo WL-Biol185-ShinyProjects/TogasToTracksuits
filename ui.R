@@ -445,10 +445,9 @@ ui <- dashboardPage(
                 ),
                 column(6,
                        box(width = NULL, solidHeader = TRUE,
-                           title = "Summer vs Winter Medal Breakdown",
-                           plotlyOutput("summer_winter_breakdown", height = "350px"))
-                )
-              ),
+                           title = "Male vs Female Participation Over Time",
+                           plotlyOutput("gender_participation", height = "350px"))
+                ),
               
               fluidRow(
                 column(6,
@@ -596,4 +595,5 @@ ui <- dashboardPage(
       )
     )
   )
+)
 )

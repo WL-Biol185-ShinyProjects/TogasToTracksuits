@@ -58,24 +58,21 @@ function(input, output, session) {
       )
   })
   
-  output$summer_winter_breakdown <- renderPlotly({
-    df <- medal_data %>%
-      filter(Medal %in% c("Gold", "Silver", "Bronze")) %>%
-      count(Season, Medal)
+  output$gender_participation <- renderPlotly({
+    df <- olympic_data %>%
+      count(Year, Sex) %>%
+      mutate(Sex = ifelse(Sex == "M", "Male", "Female"))
     
-    colors <- c("Gold" = "#FFD700", "Silver" = "#A8A9AD", "Bronze" = "#CD7F32")
-    
-    plot_ly(df, x = ~Season, y = ~n, color = ~Medal,
-            colors = colors,
-            type = "bar",
+    plot_ly(df, x = ~Year, y = ~n, color = ~Sex,
+            colors = c("Male" = "#0085C7", "Female" = "#EE334E"),
+            type = "scatter", mode = "lines+markers",
             hoverinfo = "x+y+name") %>%
       layout(
-        barmode = "group",
-        xaxis = list(title = ""),
-        yaxis = list(title = "Number of Medals"),
+        xaxis = list(title = "Year"),
+        yaxis = list(title = "Number of Athletes"),
         paper_bgcolor = "white",
         plot_bgcolor  = "white",
-        legend = list(title = list(text = "Medal"))
+        legend = list(title = list(text = "Gender"))
       )
   })
   
