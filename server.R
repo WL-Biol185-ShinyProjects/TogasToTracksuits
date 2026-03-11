@@ -375,48 +375,4 @@ function(input, output, session) {
         plot_bgcolor  = "white"
       )
   })
-  
-  # ===========================================================================
-  # DATA EXPLORER TAB
-  # ===========================================================================
-  
-  observe({
-    sports    <- sort(unique(olympic_data$Sport))
-    countries <- sort(unique(olympic_data$Team))
-    years     <- sort(unique(olympic_data$Year))
-    
-    updateSelectInput(session, "explorer_sport",
-                      choices = c("All" = "all", setNames(sports, sports)),
-                      selected = "all")
-    updateSelectInput(session, "explorer_country",
-                      choices = c("All" = "all", setNames(countries, countries)),
-                      selected = "all")
-    updateSelectInput(session, "explorer_year",
-                      choices = c("All" = "all", setNames(years, years)),
-                      selected = "all")
-  })
-  
-  output$explorer_table <- renderDT({
-    datatable(
-      filtered_data() %>%
-        select(Name, Sex, Age, Team, NOC, Year, Season, City, Sport, Event, Medal),
-      options = list(
-        pageLength = 15,
-        scrollX = TRUE,
-        dom = 'Bfrtip',
-        buttons = c('copy', 'csv', 'excel')
-      ),
-      rownames = FALSE,
-      class = 'cell-border stripe hover'
-    )
-  })
-  
-  output$download_data <- downloadHandler(
-    filename = function() {
-      paste("olympic_data_filtered_", Sys.Date(), ".csv", sep = "")
-    },
-    content = function(file) {
-      write.csv(filtered_data(), file, row.names = FALSE)
-    }
-  )
 }
