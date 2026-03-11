@@ -593,7 +593,7 @@ ui <- dashboardPage(
                            plotlyOutput("sport_top_athletes", height = "400px"))
                 )
               )
-      ),
+      )
     )
   )
 )
