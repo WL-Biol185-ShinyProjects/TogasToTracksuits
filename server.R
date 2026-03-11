@@ -34,42 +34,44 @@ function(input, output, session) {
   # DASHBOARD TAB
   # ===========================================================================
   
-  output$medal_pie_chart <- renderPlotly({
-    medal_counts <- medal_data %>%
-      count(Medal) %>%
-      filter(Medal %in% c("Gold", "Silver", "Bronze"))
-    
-    colors <- c("Gold" = "#FFD700", "Silver" = "#C0C0C0", "Bronze" = "#CD7F32")
-    
-    plot_ly(
-      medal_counts,
-      labels = ~Medal,
-      values = ~n,
-      type = "pie",
-      marker = list(colors = unname(colors[medal_counts$Medal])),
-      textinfo = "label+percent",
-      hoverinfo = "label+value+percent"
-    ) %>%
-      layout(
-        showlegend = TRUE,
-        paper_bgcolor = "white",
-        plot_bgcolor  = "white"
-      )
-  })
-  
-  output$medals_timeline <- renderPlotly({
-    timeline <- medal_data %>%
-      filter(Medal %in% c("Gold", "Silver", "Bronze")) %>%
-      count(Year, Medal)
+  output$age_distribution <- renderPlotly({
+    df <- medal_data %>%
+      filter(Medal %in% c("Gold", "Silver", "Bronze"), !is.na(Age)) %>%
+      mutate(AgeGroup = cut(Age, breaks = seq(10, 80, by = 5),
+                            labels = paste(seq(10, 75, by = 5), seq(14, 79, by = 5), sep = "-"))) %>%
+      count(AgeGroup, Medal) %>%
+      filter(!is.na(AgeGroup))
     
     colors <- c("Gold" = "#FFD700", "Silver" = "#A8A9AD", "Bronze" = "#CD7F32")
     
-    plot_ly(timeline, x = ~Year, y = ~n, color = ~Medal,
+    plot_ly(df, x = ~AgeGroup, y = ~n, color = ~Medal,
             colors = colors,
-            type = "scatter", mode = "lines+markers",
+            type = "bar",
             hoverinfo = "x+y+name") %>%
       layout(
-        xaxis = list(title = "Year"),
+        barmode = "group",
+        xaxis = list(title = "Age Group", tickangle = -45),
+        yaxis = list(title = "Number of Athletes"),
+        paper_bgcolor = "white",
+        plot_bgcolor  = "white",
+        legend = list(title = list(text = "Medal"))
+      )
+  })
+  
+  output$summer_winter_breakdown <- renderPlotly({
+    df <- medal_data %>%
+      filter(Medal %in% c("Gold", "Silver", "Bronze")) %>%
+      count(Season, Medal)
+    
+    colors <- c("Gold" = "#FFD700", "Silver" = "#A8A9AD", "Bronze" = "#CD7F32")
+    
+    plot_ly(df, x = ~Season, y = ~n, color = ~Medal,
+            colors = colors,
+            type = "bar",
+            hoverinfo = "x+y+name") %>%
+      layout(
+        barmode = "group",
+        xaxis = list(title = ""),
         yaxis = list(title = "Number of Medals"),
         paper_bgcolor = "white",
         plot_bgcolor  = "white",
