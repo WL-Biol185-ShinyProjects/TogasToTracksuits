@@ -66,8 +66,7 @@ ui <- dashboardPage(
       menuItem("Dashboard", tabName = "dashboard", icon = icon("medal")),
       menuItem("Athletes", tabName = "athletes", icon = icon("user")),
       menuItem("Countries", tabName = "countries", icon = icon("flag")),
-      menuItem("Sports", tabName = "sports", icon = icon("running")),
-      menuItem("Data Explorer", tabName = "explorer", icon = icon("table"))
+      menuItem("Sports", tabName = "sports", icon = icon("running"))
     )
   ),
   
