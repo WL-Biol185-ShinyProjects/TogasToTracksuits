@@ -28,7 +28,164 @@ function(input, output, session) {
   
   medal_data <- olympic_data %>% filter(Has_Medal == TRUE)
   
-
+  # ===========================================================================
+  # MY COUNTRY TAB
+  # ===========================================================================
+  
+  observe({
+    countries <- sort(unique(olympic_data$Team))
+    updateSelectInput(session, "fav_country",
+                      choices = countries,
+                      selected = "United States")
+  })
+  
+  fav_country_df <- reactive({
+    req(input$fav_country)
+    medal_data %>% filter(Team == input$fav_country)
+  })
+  
+  output$fav_total_medals <- renderText({
+    formatC(nrow(fav_country_df()), format = "d", big.mark = ",")
+  })
+  
+  output$fav_gold <- renderText({
+    sum(fav_country_df()$Medal == "Gold")
+  })
+  
+  output$fav_silver <- renderText({
+    sum(fav_country_df()$Medal == "Silver")
+  })
+  
+  output$fav_bronze <- renderText({
+    sum(fav_country_df()$Medal == "Bronze")
+  })
+  
+  output$fav_country_timeline <- renderPlotly({
+    df <- fav_country_df()
+    
+    if (nrow(df) == 0) {
+      return(plot_ly() %>% layout(title = "No medal data for this country"))
+    }
+    
+    timeline <- df %>%
+      filter(Medal %in% c("Gold", "Silver", "Bronze")) %>%
+      count(Year, Medal) %>%
+      mutate(Medal = factor(Medal, levels = c("Gold", "Silver", "Bronze")))
+    
+    colors <- c("Gold" = "#FFD700", "Silver" = "#A8A9AD", "Bronze" = "#CD7F32")
+    
+    plot_ly(timeline, x = ~Year, y = ~n, color = ~Medal,
+            colors = colors,
+            type = "bar",
+            hoverinfo = "x+y+name") %>%
+      layout(
+        barmode = "stack",
+        xaxis = list(title = "Year"),
+        yaxis = list(title = "Medals Won"),
+        paper_bgcolor = "white",
+        plot_bgcolor  = "white"
+      )
+  })
+  
+  output$fav_country_pie <- renderPlotly({
+    df <- fav_country_df()
+    
+    if (nrow(df) == 0) {
+      return(plot_ly() %>% layout(title = "No medal data for this country"))
+    }
+    
+    medal_counts <- df %>%
+      count(Medal) %>%
+      filter(Medal %in% c("Gold", "Silver", "Bronze"))
+    
+    colors <- c("Gold" = "#FFD700", "Silver" = "#C0C0C0", "Bronze" = "#CD7F32")
+    
+    plot_ly(medal_counts,
+            labels = ~Medal,
+            values = ~n,
+            type = "pie",
+            marker = list(colors = unname(colors[medal_counts$Medal])),
+            textinfo = "label+percent",
+            hoverinfo = "label+value+percent") %>%
+      layout(
+        showlegend = TRUE,
+        paper_bgcolor = "white",
+        plot_bgcolor  = "white"
+      )
+  })
+  
+  output$fav_country_sports <- renderPlotly({
+    df <- fav_country_df()
+    
+    if (nrow(df) == 0) {
+      return(plot_ly() %>% layout(title = "No medal data for this country"))
+    }
+    
+    top_sports <- df %>%
+      filter(Medal %in% c("Gold", "Silver", "Bronze")) %>%
+      count(Sport, Medal) %>%
+      group_by(Sport) %>%
+      mutate(Total = sum(n)) %>%
+      ungroup()
+    
+    top10_sports <- top_sports %>%
+      distinct(Sport, Total) %>%
+      arrange(desc(Total)) %>%
+      head(10) %>%
+      pull(Sport)
+    
+    plot_data <- top_sports %>%
+      filter(Sport %in% top10_sports) %>%
+      mutate(Sport = factor(Sport, levels = rev(top10_sports)))
+    
+    colors <- c("Gold" = "#FFD700", "Silver" = "#A8A9AD", "Bronze" = "#CD7F32")
+    
+    plot_ly(plot_data, x = ~n, y = ~Sport, color = ~Medal,
+            colors = colors,
+            type = "bar", orientation = "h",
+            hoverinfo = "x+y+name") %>%
+      layout(
+        barmode = "stack",
+        xaxis = list(title = "Medals"),
+        yaxis = list(title = ""),
+        paper_bgcolor = "white",
+        plot_bgcolor  = "white"
+      )
+  })
+  
+  output$fav_country_athletes <- renderPlotly({
+    df <- fav_country_df()
+    
+    if (nrow(df) == 0) {
+      return(plot_ly() %>% layout(title = "No medal data for this country"))
+    }
+    
+    top10_names <- df %>%
+      filter(Medal %in% c("Gold", "Silver", "Bronze")) %>%
+      count(Name) %>%
+      arrange(desc(n)) %>%
+      head(10) %>%
+      pull(Name)
+    
+    plot_data <- df %>%
+      filter(Medal %in% c("Gold", "Silver", "Bronze"), Name %in% top10_names) %>%
+      count(Name, Medal) %>%
+      mutate(Name = factor(Name, levels = rev(top10_names)))
+    
+    colors <- c("Gold" = "#FFD700", "Silver" = "#A8A9AD", "Bronze" = "#CD7F32")
+    
+    plot_ly(plot_data, x = ~n, y = ~Name, color = ~Medal,
+            colors = colors,
+            type = "bar", orientation = "h",
+            hoverinfo = "x+y+name") %>%
+      layout(
+        barmode = "stack",
+        xaxis = list(title = "Medals"),
+        yaxis = list(title = ""),
+        paper_bgcolor = "white",
+        plot_bgcolor  = "white"
+      )
+  })
   
   # ===========================================================================
   # DASHBOARD TAB
