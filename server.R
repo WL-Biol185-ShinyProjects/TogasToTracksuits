@@ -28,6 +28,51 @@ function(input, output, session) {
   medal_data <- olympic_data %>% filter(Has_Medal == TRUE)
   
   # ===========================================================================
+  # STARTUP MODAL - FAVORITE COUNTRY SELECTION
+  # ===========================================================================
+  
+  observe({
+    countries <- sort(unique(olympic_data$Team))
+    
+    showModal(modalDialog(
+      title = tags$div(
+        style = "text-align: center;",
+        icon("medal", style = "font-size: 48px; color: #FFD700; margin-bottom: 15px;"),
+        tags$h2("Welcome to Olympic Analytics!", 
+                style = "color: #0085C7; margin-top: 10px;")
+      ),
+      tags$div(
+        style = "text-align: center; padding: 20px;",
+        tags$h4("Select Your Favorite Country", style = "margin-bottom: 20px;"),
+        tags$p("Your dashboard will jump straight to your country's Olympic history!",
+               style = "color: #7F8C8D; margin-bottom: 20px;"),
+        selectInput("modal_country", NULL,
+                    choices = countries,
+                    selected = "United States",
+                    width = "100%")
+      ),
+      footer = tagList(
+        actionButton("skip_country", "Skip", class = "btn-default"),
+        actionButton("confirm_country", "Let's Go!", class = "btn-primary",
+                     icon = icon("check"))
+      ),
+      size = "m",
+      easyClose = FALSE
+    ))
+  }, once = TRUE)
+  
+  observeEvent(input$confirm_country, {
+    updateSelectInput(session, "fav_country", selected = input$modal_country)
+    removeModal()
+    updateTabItems(session, "tabs", "my_country")
+  })
+  
+  observeEvent(input$skip_country, {
+    removeModal()
+  })
+  
+  
+  # ===========================================================================
   # DASHBOARD TAB
   # ===========================================================================
   
