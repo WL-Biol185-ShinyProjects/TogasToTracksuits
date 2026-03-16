@@ -66,17 +66,16 @@ ui <- dashboardPage(
       menuItem("Dashboard", tabName = "dashboard", icon = icon("medal")),
       menuItem("Athletes", tabName = "athletes", icon = icon("user")),
       menuItem("Countries", tabName = "countries", icon = icon("flag")),
-      menuItem("Sports", tabName = "sports", icon = icon("running"))
+      menuItem("Sports", tabName = "sports", icon = icon("running")),
+      menuItem("My Country", tabName = "my_country", icon = icon("star"))
     )
   ),
   
   dashboardBody(
-    # Custom CSS - Olympic themed (Gold, Blue, Green)
     tags$head(
       tags$style(HTML("
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
         
-        /* Global Styles */
         body, .content-wrapper, .main-sidebar {
           font-family: 'Poppins', sans-serif !important;
         }
@@ -85,7 +84,6 @@ ui <- dashboardPage(
           background: linear-gradient(135deg, #f0f4f8 0%, #e6eef5 100%) !important;
         }
         
-        /* Header - Olympic Blue and Gold */
         .main-header .logo {
           background: linear-gradient(135deg, #0085C7 0%, #005A8C 100%) !important;
           font-weight: 700 !important;
@@ -97,7 +95,6 @@ ui <- dashboardPage(
           background: linear-gradient(135deg, #0085C7 0%, #005A8C 100%) !important;
         }
         
-        /* Sidebar - Deep Purple/Navy */
         .main-sidebar {
           background: linear-gradient(180deg, #2C3E50 0%, #34495E 100%) !important;
         }
@@ -123,7 +120,6 @@ ui <- dashboardPage(
           color: #FFD700 !important;
         }
         
-        /* Box Styling - Clean and Modern */
         .box {
           border-radius: 12px !important;
           box-shadow: 0 4px 20px rgba(0,0,0,0.06) !important;
@@ -150,7 +146,6 @@ ui <- dashboardPage(
           letter-spacing: 0.3px;
         }
         
-        /* Metric Cards - Olympic Ring Colors */
         .metric-card {
           background: white;
           padding: 30px 20px;
@@ -198,7 +193,6 @@ ui <- dashboardPage(
           -webkit-text-fill-color: transparent;
         }
         
-        /* Buttons - Olympic Gold */
         .btn-primary {
           background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
           border: none !important;
@@ -216,7 +210,6 @@ ui <- dashboardPage(
           transform: translateY(-2px);
         }
         
-        /* Headers - Olympic Colors */
         h2 {
           color: #0085C7;
           font-weight: 700;
@@ -231,7 +224,6 @@ ui <- dashboardPage(
           font-weight: 600;
         }
         
-        /* Home Page - Olympic Rings Theme */
         .olympic-home {
           background: white;
           border-radius: 20px;
@@ -310,7 +302,6 @@ ui <- dashboardPage(
           font-size: 18px;
         }
         
-        /* Tables */
         table thead {
           background: linear-gradient(135deg, #0085C7 0%, #005A8C 100%);
           color: white;
@@ -328,7 +319,6 @@ ui <- dashboardPage(
           background: rgba(0, 133, 199, 0.05);
         }
         
-        /* Form Controls */
         .form-control, .selectize-input {
           border-radius: 8px !important;
           border: 2px solid #E0E6ED !important;
@@ -340,43 +330,27 @@ ui <- dashboardPage(
           box-shadow: 0 0 0 0.2rem rgba(0, 133, 199, 0.15) !important;
         }
         
-        /* Scrollbar - Olympic Colors */
-        ::-webkit-scrollbar {
-          width: 10px;
-        }
-        
-        ::-webkit-scrollbar-track {
-          background: #ECF0F1;
-        }
-        
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #ECF0F1; }
         ::-webkit-scrollbar-thumb {
           background: linear-gradient(180deg, #0085C7, #FFD700);
           border-radius: 5px;
         }
-        
         ::-webkit-scrollbar-thumb:hover {
           background: linear-gradient(180deg, #005A8C, #FFA500);
         }
         
-        /* Animation */
         @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(30px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
         
-        .box, .metric-card {
-          animation: fadeInUp 0.6s ease;
-        }
+        .box, .metric-card { animation: fadeInUp 0.6s ease; }
       "))
     ),
     
     tabItems(
+      
       # ========================================
       # HOME TAB
       # ========================================
@@ -422,21 +396,19 @@ ui <- dashboardPage(
       tabItem(tabName = "dashboard",
               h2(icon("medal"), " Medal Dashboard"),
               
-              # Summary Cards
               fluidRow(
-                column(3, div(class = "metric-card", 
+                column(3, div(class = "metric-card",
                               h4("Total Medals"), h2("39,783"))),
-                column(3, div(class = "metric-card", 
+                column(3, div(class = "metric-card",
                               h4("Athletes"), h2("134,732"))),
-                column(3, div(class = "metric-card", 
+                column(3, div(class = "metric-card",
                               h4("Countries"), h2("230"))),
-                column(3, div(class = "metric-card", 
+                column(3, div(class = "metric-card",
                               h4("Sports"), h2("66")))
               ),
               
               br(),
               
-              # Charts
               fluidRow(
                 column(6,
                        box(width = NULL, solidHeader = TRUE,
@@ -447,7 +419,8 @@ ui <- dashboardPage(
                        box(width = NULL, solidHeader = TRUE,
                            title = "Male vs Female Participation Over Time",
                            plotlyOutput("gender_participation", height = "350px"))
-                ),
+                )
+              ),
               
               fluidRow(
                 column(6,
@@ -487,13 +460,13 @@ ui <- dashboardPage(
               ),
               
               fluidRow(
-                column(3, div(class = "metric-card", 
+                column(3, div(class = "metric-card",
                               h4("Total Medals"), h2(textOutput("athlete_total_medals", inline = TRUE)))),
-                column(3, div(class = "metric-card", 
+                column(3, div(class = "metric-card",
                               h4("Gold"), h2(textOutput("athlete_gold", inline = TRUE)))),
-                column(3, div(class = "metric-card", 
+                column(3, div(class = "metric-card",
                               h4("Silver"), h2(textOutput("athlete_silver", inline = TRUE)))),
-                column(3, div(class = "metric-card", 
+                column(3, div(class = "metric-card",
                               h4("Bronze"), h2(textOutput("athlete_bronze", inline = TRUE))))
               ),
               
@@ -568,11 +541,11 @@ ui <- dashboardPage(
                 ),
                 column(8,
                        fluidRow(
-                         column(4, div(class = "metric-card", 
+                         column(4, div(class = "metric-card",
                                        h4("Total Medals"), h2(textOutput("sport_medals", inline = TRUE)))),
-                         column(4, div(class = "metric-card", 
+                         column(4, div(class = "metric-card",
                                        h4("Athletes"), h2(textOutput("sport_athletes", inline = TRUE)))),
-                         column(4, div(class = "metric-card", 
+                         column(4, div(class = "metric-card",
                                        h4("Countries"), h2(textOutput("sport_countries", inline = TRUE))))
                        )
                 )
@@ -592,8 +565,68 @@ ui <- dashboardPage(
                            plotlyOutput("sport_top_athletes", height = "400px"))
                 )
               )
+      ),
+      
+      # ========================================
+      # MY COUNTRY TAB
+      # ========================================
+      tabItem(tabName = "my_country",
+              h2(icon("star"), " My Country"),
+              
+              fluidRow(
+                column(4,
+                       box(width = NULL, status = "primary", solidHeader = TRUE,
+                           title = "Select Your Country",
+                           selectInput("fav_country", "Choose Your Country:",
+                                       choices = NULL,
+                                       selected = NULL),
+                           hr(),
+                           helpText(icon("info-circle"), " Select your country to see its complete Olympic history.")
+                       )
+                ),
+                column(8,
+                       fluidRow(
+                         column(3, div(class = "metric-card",
+                                       h4("Total Medals"), h2(textOutput("fav_total_medals", inline = TRUE)))),
+                         column(3, div(class = "metric-card",
+                                       h4("Gold"), h2(textOutput("fav_gold", inline = TRUE)))),
+                         column(3, div(class = "metric-card",
+                                       h4("Silver"), h2(textOutput("fav_silver", inline = TRUE)))),
+                         column(3, div(class = "metric-card",
+                                       h4("Bronze"), h2(textOutput("fav_bronze", inline = TRUE))))
+                       )
+                )
+              ),
+              
+              br(),
+              
+              fluidRow(
+                column(6,
+                       box(width = NULL, solidHeader = TRUE,
+                           title = "Medals Over Time",
+                           plotlyOutput("fav_country_timeline", height = "350px"))
+                ),
+                column(6,
+                       box(width = NULL, solidHeader = TRUE,
+                           title = "Medal Breakdown",
+                           plotlyOutput("fav_country_pie", height = "350px"))
+                )
+              ),
+              
+              fluidRow(
+                column(6,
+                       box(width = NULL, solidHeader = TRUE,
+                           title = "Top Sports",
+                           plotlyOutput("fav_country_sports", height = "400px"))
+                ),
+                column(6,
+                       box(width = NULL, solidHeader = TRUE,
+                           title = "Top Athletes",
+                           plotlyOutput("fav_country_athletes", height = "400px"))
+                )
+              )
       )
+      
     )
   )
-)
 )
