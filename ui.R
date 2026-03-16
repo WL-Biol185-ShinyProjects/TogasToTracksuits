@@ -154,7 +154,7 @@ ui <- dashboardPage(
         .metric-card {
           background: white;
           padding: 30px 20px;
-          border-radius: 12px;
+          border-radius: 12px ;
           text-align: center;
           box-shadow: 0 3px 15px rgba(0,0,0,0.08);
           border-top: 5px solid #FFD700;
