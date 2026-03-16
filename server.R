@@ -17,12 +17,12 @@ function(input, output, session) {
   
   olympic_data <- olympic_data %>%
     mutate(
-      Medal  = ifelse(is.na(Medal), "None", Medal),
+      Medal     = ifelse(is.na(Medal), "None", Medal),
       Has_Medal = (Medal != "None"),
-      Age    = suppressWarnings(as.numeric(Age)),
-      Height = suppressWarnings(as.numeric(Height)),
-      Weight = suppressWarnings(as.numeric(Weight)),
-      Year   = as.integer(Year)
+      Age       = suppressWarnings(as.numeric(Age)),
+      Height    = suppressWarnings(as.numeric(Height)),
+      Weight    = suppressWarnings(as.numeric(Weight)),
+      Year      = as.integer(Year)
     )
   
   medal_data <- olympic_data %>% filter(Has_Medal == TRUE)
@@ -68,6 +68,7 @@ function(input, output, session) {
   observeEvent(input$skip_country, {
     removeModal()
   })
+  
   # ===========================================================================
   # DASHBOARD TAB
   # ===========================================================================
@@ -341,9 +342,9 @@ function(input, output, session) {
     sport_df() %>% filter(Has_Medal == TRUE)
   })
   
-  output$sport_medals    <- renderText({ formatC(nrow(sport_medals_df()),          format = "d", big.mark = ",") })
-  output$sport_athletes  <- renderText({ formatC(length(unique(sport_df()$Name)),  format = "d", big.mark = ",") })
-  output$sport_countries <- renderText({ formatC(length(unique(sport_df()$Team)),  format = "d", big.mark = ",") })
+  output$sport_medals    <- renderText({ formatC(nrow(sport_medals_df()),         format = "d", big.mark = ",") })
+  output$sport_athletes  <- renderText({ formatC(length(unique(sport_df()$Name)), format = "d", big.mark = ",") })
+  output$sport_countries <- renderText({ formatC(length(unique(sport_df()$Team)), format = "d", big.mark = ",") })
   
   output$sport_top_countries <- renderPlotly({
     df <- sport_medals_df()
@@ -561,6 +562,161 @@ function(input, output, session) {
         yaxis = list(title = ""),
         paper_bgcolor = "white",
         plot_bgcolor  = "white"
+      )
+  })
+  
+  # ===========================================================================
+  # DOMINANCE INDEX TAB
+  # ===========================================================================
+  
+  dominance_df <- reactive({
+    df <- medal_data %>%
+      filter(Medal %in% c("Gold", "Silver", "Bronze"))
+    
+    if (input$dominance_season != "both") {
+      df <- df %>% filter(Season == input$dominance_season)
+    }
+    
+    if (input$dominance_medal == "Gold") {
+      df <- df %>% filter(Medal == "Gold")
+    }
+    
+    df <- df %>%
+      mutate(Decade = paste0(floor(Year / 10) * 10, "s"))
+    
+    return(df)
+  })
+  
+  decade_summary <- reactive({
+    dominance_df() %>%
+      count(Decade, Team) %>%
+      group_by(Decade) %>%
+      mutate(Total_That_Decade = sum(n)) %>%
+      ungroup()
+  })
+  
+  top5_countries <- reactive({
+    dominance_df() %>%
+      count(Team) %>%
+      arrange(desc(n)) %>%
+      head(5) %>%
+      pull(Team)
+  })
+  
+  top10_countries <- reactive({
+    dominance_df() %>%
+      count(Team) %>%
+      arrange(desc(n)) %>%
+      head(10) %>%
+      pull(Team)
+  })
+  
+  decade_champions <- reactive({
+    decade_summary() %>%
+      group_by(Decade) %>%
+      slice_max(n, n = 1) %>%
+      ungroup() %>%
+      arrange(Decade)
+  })
+  
+  output$dom_top_country <- renderText({
+    dominance_df() %>%
+      count(Team) %>%
+      arrange(desc(n)) %>%
+      slice(1) %>%
+      pull(Team)
+  })
+  
+  output$dom_peak_decade <- renderText({
+    decade_champions() %>%
+      arrange(desc(n)) %>%
+      slice(1) %>%
+      pull(Decade)
+  })
+  
+  output$dom_peak_medals <- renderText({
+    decade_champions() %>%
+      arrange(desc(n)) %>%
+      slice(1) %>%
+      pull(n) %>%
+      formatC(format = "d", big.mark = ",")
+  })
+  
+  output$dominance_heatmap <- renderPlotly({
+    df <- decade_summary() %>%
+      filter(Team %in% top10_countries())
+    
+    if (nrow(df) == 0) {
+      return(plot_ly() %>% layout(title = "No data available"))
+    }
+    
+    plot_ly(df,
+            x = ~Decade,
+            y = ~Team,
+            z = ~n,
+            type = "heatmap",
+            colorscale = list(
+              c(0,    "#EEF2F7"),
+              c(0.25, "#0085C7"),
+              c(0.5,  "#005A8C"),
+              c(0.75, "#FFD700"),
+              c(1,    "#FF8C00")
+            ),
+            hovertext = ~paste0(Team, "<br>", Decade, "<br>Medals: ", n),
+            hoverinfo = "text") %>%
+      layout(
+        xaxis = list(title = "Decade"),
+        yaxis = list(title = ""),
+        paper_bgcolor = "white",
+        plot_bgcolor  = "white"
+      )
+  })
+  
+  output$decade_champion_bar <- renderPlotly({
+    df <- decade_champions()
+    
+    if (nrow(df) == 0) {
+      return(plot_ly() %>% layout(title = "No data available"))
+    }
+    
+    plot_ly(df,
+            x = ~Decade,
+            y = ~n,
+            color = ~Team,
+            type = "bar",
+            hovertext = ~paste0(Team, "<br>", Decade, "<br>Medals: ", n),
+            hoverinfo = "text") %>%
+      layout(
+        xaxis = list(title = "Decade"),
+        yaxis = list(title = "Medals Won"),
+        paper_bgcolor = "white",
+        plot_bgcolor  = "white",
+        legend = list(title = list(text = "Country"))
+      )
+  })
+  
+  output$dominance_line <- renderPlotly({
+    df <- decade_summary() %>%
+      filter(Team %in% top5_countries())
+    
+    if (nrow(df) == 0) {
+      return(plot_ly() %>% layout(title = "No data available"))
+    }
+    
+    plot_ly(df,
+            x = ~Decade,
+            y = ~n,
+            color = ~Team,
+            type = "scatter",
+            mode = "lines+markers",
+            hovertext = ~paste0(Team, "<br>", Decade, "<br>Medals: ", n),
+            hoverinfo = "text") %>%
+      layout(
+        xaxis = list(title = "Decade"),
+        yaxis = list(title = "Medals Won"),
+        paper_bgcolor = "white",
+        plot_bgcolor  = "white",
+        legend = list(title = list(text = "Country"))
       )
   })
   
