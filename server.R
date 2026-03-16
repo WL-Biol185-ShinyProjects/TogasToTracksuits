@@ -706,23 +706,41 @@ function(input, output, session) {
     
     plot_ly(df,
             x = ~Decade,
-            y = ~Team,
+            y = ~reorder(Team, n),
             z = ~n,
             type = "heatmap",
             colorscale = list(
-              c(0,    "#EEF2F7"),
-              c(0.25, "#0085C7"),
-              c(0.5,  "#005A8C"),
-              c(0.75, "#FFD700"),
-              c(1,    "#FF8C00")
+              c(0,    "#F7F9FC"),
+              c(0.2,  "#C8E6F5"),
+              c(0.4,  "#0085C7"),
+              c(0.7,  "#FFD700"),
+              c(1,    "#FF4500")
             ),
-            hovertext = ~paste0(Team, "<br>", Decade, "<br>Medals: ", n),
-            hoverinfo = "text") %>%
+            text = ~paste0("<b>", Team, "</b><br>",
+                           "Decade: ", Decade, "<br>",
+                           "Medals: ", n),
+            hoverinfo = "text",
+            showscale = TRUE,
+            colorbar = list(
+              title = "Medals",
+              titlefont = list(size = 13),
+              tickfont  = list(size = 11)
+            )) %>%
       layout(
-        xaxis = list(title = "Decade"),
-        yaxis = list(title = ""),
+        xaxis = list(
+          title      = "",
+          tickangle  = -45,
+          tickfont   = list(size = 12, color = "#2C3E50"),
+          showgrid   = FALSE
+        ),
+        yaxis = list(
+          title    = "",
+          tickfont = list(size = 12, color = "#2C3E50"),
+          showgrid = FALSE
+        ),
         paper_bgcolor = "white",
-        plot_bgcolor  = "white"
+        plot_bgcolor  = "white",
+        margin = list(l = 140, r = 40, t = 20, b = 80)
       )
   })
   
@@ -733,19 +751,47 @@ function(input, output, session) {
       return(plot_ly() %>% layout(title = "No data available"))
     }
     
+    unique_teams <- unique(df$Team)
+    ring_colors  <- c("#0085C7", "#EE334E", "#FFD700", "#00A651", "#000000",
+                      "#F39C12", "#8E44AD", "#16A085", "#E74C3C", "#2C3E50")
+    team_colors  <- setNames(ring_colors[seq_along(unique_teams)], unique_teams)
+    
     plot_ly(df,
             x = ~Decade,
             y = ~n,
             color = ~Team,
+            colors = team_colors,
             type = "bar",
-            hovertext = ~paste0(Team, "<br>", Decade, "<br>Medals: ", n),
-            hoverinfo = "text") %>%
+            text = ~paste0("<b>", Team, "</b><br>",
+                           Decade, "<br>",
+                           "Medals: <b>", n, "</b>"),
+            hoverinfo = "text",
+            marker = list(
+              line = list(color = "white", width = 1.5)
+            )) %>%
       layout(
-        xaxis = list(title = "Decade"),
-        yaxis = list(title = "Medals Won"),
+        barmode = "stack",
+        xaxis = list(
+          title     = "",
+          tickangle = -45,
+          tickfont  = list(size = 12, color = "#2C3E50"),
+          showgrid  = FALSE
+        ),
+        yaxis = list(
+          title      = "Medals Won",
+          tickfont   = list(size = 12, color = "#2C3E50"),
+          gridcolor  = "#ECF0F1",
+          gridwidth  = 1
+        ),
         paper_bgcolor = "white",
         plot_bgcolor  = "white",
-        legend = list(title = list(text = "Country"))
+        legend = list(
+          title       = list(text = "<b>Country</b>"),
+          bgcolor     = "rgba(255,255,255,0.9)",
+          bordercolor = "#E0E6ED",
+          borderwidth = 1
+        ),
+        margin = list(l = 60, r = 40, t = 20, b = 80)
       )
   })
   
@@ -757,20 +803,50 @@ function(input, output, session) {
       return(plot_ly() %>% layout(title = "No data available"))
     }
     
+    unique_teams <- unique(df$Team)
+    ring_colors  <- c("#0085C7", "#EE334E", "#FFD700", "#00A651", "#2C3E50")
+    team_colors  <- setNames(ring_colors[seq_along(unique_teams)], unique_teams)
+    
     plot_ly(df,
             x = ~Decade,
             y = ~n,
             color = ~Team,
+            colors = team_colors,
             type = "scatter",
             mode = "lines+markers",
-            hovertext = ~paste0(Team, "<br>", Decade, "<br>Medals: ", n),
-            hoverinfo = "text") %>%
+            text = ~paste0("<b>", Team, "</b><br>",
+                           Decade, "<br>",
+                           "Medals: <b>", n, "</b>"),
+            hoverinfo = "text",
+            line   = list(width = 3),
+            marker = list(
+              size = 10,
+              line = list(color = "white", width = 2)
+            )) %>%
       layout(
-        xaxis = list(title = "Decade"),
-        yaxis = list(title = "Medals Won"),
+        xaxis = list(
+          title     = "",
+          tickangle = -45,
+          tickfont  = list(size = 12, color = "#2C3E50"),
+          showgrid  = FALSE
+        ),
+        yaxis = list(
+          title     = "Medals Won",
+          tickfont  = list(size = 12, color = "#2C3E50"),
+          gridcolor = "#ECF0F1",
+          gridwidth = 1,
+          zeroline  = FALSE
+        ),
         paper_bgcolor = "white",
         plot_bgcolor  = "white",
-        legend = list(title = list(text = "Country"))
+        legend = list(
+          title       = list(text = "<b>Country</b>"),
+          bgcolor     = "rgba(255,255,255,0.9)",
+          bordercolor = "#E0E6ED",
+          borderwidth = 1
+        ),
+        margin    = list(l = 60, r = 40, t = 20, b = 80),
+        hovermode = "x unified"
       )
   })
   
