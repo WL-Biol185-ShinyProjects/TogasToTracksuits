@@ -62,12 +62,13 @@ ui <- dashboardPage(
     width = 300,
     sidebarMenu(
       id = "tabs",
-      menuItem("Home", tabName = "home", icon = icon("home")),
-      menuItem("Dashboard", tabName = "dashboard", icon = icon("medal")),
-      menuItem("Athletes", tabName = "athletes", icon = icon("user")),
-      menuItem("Countries", tabName = "countries", icon = icon("flag")),
-      menuItem("Sports", tabName = "sports", icon = icon("running")),
-      menuItem("My Country", tabName = "my_country", icon = icon("star"))
+      menuItem("Home",            tabName = "home",       icon = icon("home")),
+      menuItem("Dashboard",       tabName = "dashboard",  icon = icon("medal")),
+      menuItem("Athletes",        tabName = "athletes",   icon = icon("user")),
+      menuItem("Countries",       tabName = "countries",  icon = icon("flag")),
+      menuItem("Sports",          tabName = "sports",     icon = icon("running")),
+      menuItem("My Country",      tabName = "my_country", icon = icon("star")),
+      menuItem("Dominance Index", tabName = "dominance",  icon = icon("trophy"))
     )
   ),
   
@@ -622,6 +623,72 @@ ui <- dashboardPage(
                        box(width = NULL, solidHeader = TRUE,
                            title = "Top Athletes",
                            plotlyOutput("fav_country_athletes", height = "400px"))
+                )
+              )
+      ),
+      
+      # ========================================
+      # DOMINANCE INDEX TAB
+      # ========================================
+      tabItem(tabName = "dominance",
+              h2(icon("trophy"), " Dominance Index"),
+              
+              fluidRow(
+                column(4,
+                       box(width = NULL, status = "primary", solidHeader = TRUE,
+                           title = "Controls",
+                           selectInput("dominance_medal", "Medal Type:",
+                                       choices = c("All Medals" = "all",
+                                                   "Gold Only"  = "Gold"),
+                                       selected = "all"),
+                           hr(),
+                           selectInput("dominance_season", "Season:",
+                                       choices = c("Both"   = "both",
+                                                   "Summer" = "Summer",
+                                                   "Winter" = "Winter"),
+                                       selected = "both"),
+                           hr(),
+                           helpText(icon("info-circle"), " Shows which countries dominated each decade of Olympic history based on total medals won.")
+                       )
+                ),
+                column(8,
+                       fluidRow(
+                         column(4, div(class = "metric-card",
+                                       h4("Most Dominant Country"),
+                                       h2(textOutput("dom_top_country", inline = TRUE)))),
+                         column(4, div(class = "metric-card",
+                                       h4("Peak Decade"),
+                                       h2(textOutput("dom_peak_decade", inline = TRUE)))),
+                         column(4, div(class = "metric-card",
+                                       h4("Peak Medal Count"),
+                                       h2(textOutput("dom_peak_medals", inline = TRUE))))
+                       )
+                )
+              ),
+              
+              br(),
+              
+              fluidRow(
+                column(12,
+                       box(width = NULL, solidHeader = TRUE,
+                           title = "Medals Per Decade by Country (Top 10)",
+                           plotlyOutput("dominance_heatmap", height = "500px"))
+                )
+              ),
+              
+              fluidRow(
+                column(12,
+                       box(width = NULL, solidHeader = TRUE,
+                           title = "Decade Champion — Who Was On Top Each Decade",
+                           plotlyOutput("decade_champion_bar", height = "400px"))
+                )
+              ),
+              
+              fluidRow(
+                column(12,
+                       box(width = NULL, solidHeader = TRUE,
+                           title = "Dominance Over Time — Top 5 Countries",
+                           plotlyOutput("dominance_line", height = "400px"))
                 )
               )
       )
