@@ -613,6 +613,7 @@ ui <- dashboardPage(
                            plotlyOutput("fav_country_pie", height = "350px"))
                 )
               ),
+              
               fluidRow(
                 column(6,
                        box(width = NULL, solidHeader = TRUE,
