@@ -642,6 +642,8 @@ function(input, output, session) {
       formatC(format = "d", big.mark = ",")
   })
   
+  # RESTORED: heatmap grid with total medals per country per decade
+  # with improved readable color scale
   output$dominance_heatmap <- renderPlotly({
     df <- decade_summary() %>%
       filter(Team %in% top10_countries())
@@ -650,17 +652,28 @@ function(input, output, session) {
       return(plot_ly() %>% layout(title = "No data available"))
     }
     
+    # Build a complete grid so every country/decade combo exists
+    all_decades  <- sort(unique(df$Decade))
+    all_teams    <- top10_countries()
+    full_grid    <- expand.grid(Decade = all_decades, Team = all_teams,
+                                stringsAsFactors = FALSE)
+    df <- full_grid %>%
+      left_join(df %>% select(Decade, Team, n), by = c("Decade", "Team")) %>%
+      mutate(n = ifelse(is.na(n), 0, n),
+             Team = factor(Team, levels = rev(all_teams)))
+    
     plot_ly(df,
             x = ~Decade,
-            y = ~reorder(Team, n),
+            y = ~Team,
             z = ~n,
             type = "heatmap",
             colorscale = list(
-              c(0,    "#F7F9FC"),
-              c(0.2,  "#C8E6F5"),
-              c(0.4,  "#0085C7"),
-              c(0.7,  "#FFD700"),
-              c(1,    "#FF4500")
+              c(0,    "#FFFFFF"),
+              c(0.15, "#D4EAF7"),
+              c(0.35, "#74B9E0"),
+              c(0.6,  "#0085C7"),
+              c(0.8,  "#FFD700"),
+              c(1,    "#FF8C00")
             ),
             text = ~paste0("<b>", Team, "</b><br>",
                            "Decade: ", Decade, "<br>",
@@ -668,16 +681,18 @@ function(input, output, session) {
             hoverinfo = "text",
             showscale = TRUE,
             colorbar = list(
-              title = "Medals",
-              titlefont = list(size = 13),
-              tickfont  = list(size = 11)
-            )) %>%
+              title      = "Medals",
+              titlefont  = list(size = 13, color = "#2C3E50"),
+              tickfont   = list(size = 11, color = "#2C3E50"),
+              len        = 0.8
+            ),
+            zmin = 0) %>%
       layout(
         xaxis = list(
-          title      = "",
-          tickangle  = -45,
-          tickfont   = list(size = 12, color = "#2C3E50"),
-          showgrid   = FALSE
+          title    = "",
+          tickangle = -45,
+          tickfont  = list(size = 12, color = "#2C3E50"),
+          showgrid  = FALSE
         ),
         yaxis = list(
           title    = "",
@@ -686,17 +701,28 @@ function(input, output, session) {
         ),
         paper_bgcolor = "white",
         plot_bgcolor  = "white",
-        margin = list(l = 140, r = 40, t = 20, b = 80)
+        margin = list(l = 160, r = 80, t = 20, b = 80)
       )
   })
   
-  # ---- ONLY CHANGE: decade_champion_bar replaced with decade_champion_table ----
+  # UPDATED: decade champion table with flag, gold/silver/bronze dots AND total
   output$decade_champion_table <- DT::renderDataTable({
     df <- decade_champions()
     
     if (nrow(df) == 0) {
       return(DT::datatable(data.frame(Message = "No data available")))
     }
+    
+    medal_breakdown <- dominance_df() %>%
+      inner_join(decade_champions() %>% select(Decade, Team),
+                 by = c("Decade", "Team")) %>%
+      group_by(Decade, Team, Medal) %>%
+      summarise(count = n(), .groups = "drop") %>%
+      tidyr::pivot_wider(names_from = Medal, values_from = count,
+                         values_fill = 0)
+    
+    df <- df %>%
+      left_join(medal_breakdown, by = c("Decade", "Team"))
     
     flag_codes <- c(
       "United States"  = "us", "Soviet Union"   = "ru", "Germany"        = "de",
@@ -715,28 +741,32 @@ function(input, output, session) {
     
     df <- df %>%
       mutate(
-        iso = tolower(flag_codes[Team]),
-        iso = ifelse(is.na(iso), "un", iso),
-        Flag = paste0(
+        iso    = tolower(flag_codes[Team]),
+        iso    = ifelse(is.na(iso), "un", iso),
+        Flag   = paste0(
           '<img src="https://flagcdn.com/32x24/', iso, '.png" ',
-          'width="32" height="24" style="border-radius:3px; ',
-          'box-shadow: 0 1px 4px rgba(0,0,0,0.2);" ',
+          'width="32" height="24" ',
+          'style="border-radius:3px; box-shadow: 0 1px 4px rgba(0,0,0,0.2);" ',
           'onerror="this.style.display=\'none\'">'
         ),
-        Medal_Bar = paste0(
-          '<div style="background: linear-gradient(90deg, #FFD700 ',
-          round((n / max(n)) * 100), '%, #f0f4f8 ',
-          round((n / max(n)) * 100), '%); ',
-          'border-radius: 4px; padding: 4px 8px; font-weight: 600; ',
-          'color: #2C3E50;">',
-          n, '</div>'
+        Gold   = ifelse(is.na(Gold),   0L, as.integer(Gold)),
+        Silver = ifelse(is.na(Silver), 0L, as.integer(Silver)),
+        Bronze = ifelse(is.na(Bronze), 0L, as.integer(Bronze)),
+        Total  = Gold + Silver + Bronze,
+        Medals = paste0(
+          '<span style="color:#DAA520; font-weight:700; font-size:15px;">&#9679; ',
+          Gold, '</span>&nbsp;&nbsp;',
+          '<span style="color:#909090; font-weight:700; font-size:15px;">&#9679; ',
+          Silver, '</span>&nbsp;&nbsp;',
+          '<span style="color:#8B4513; font-weight:700; font-size:15px;">&#9679; ',
+          Bronze, '</span>&nbsp;&nbsp;',
+          '<span style="background:#0085C7; color:white; font-weight:700; ',
+          'font-size:12px; padding:2px 8px; border-radius:10px;">',
+          Total, ' total</span>'
         )
       ) %>%
-      select(Flag, Decade, Team, Medal_Bar) %>%
-      rename(
-        Country = Team,
-        Medals  = Medal_Bar
-      )
+      select(Flag, Decade, Team, Medals) %>%
+      rename(Country = Team)
     
     DT::datatable(
       df,
@@ -748,11 +778,11 @@ function(input, output, session) {
         ordering   = FALSE,
         scrollX    = FALSE,
         columnDefs = list(
-          list(className = 'dt-center', targets = c(0, 1)),
-          list(width = '50px',  targets = 0),
-          list(width = '100px', targets = 1),
-          list(width = '200px', targets = 2),
-          list(width = '200px', targets = 3)
+          list(className = 'dt-center', targets = c(0, 1, 3)),
+          list(width = '55px',  targets = 0),
+          list(width = '90px',  targets = 1),
+          list(width = '180px', targets = 2),
+          list(width = '300px', targets = 3)
         )
       ),
       class = 'cell-border stripe'
@@ -771,7 +801,7 @@ function(input, output, session) {
       ) %>%
       DT::formatStyle(
         columns    = 0:3,
-        lineHeight = '40px'
+        lineHeight = '44px'
       )
   })
   
