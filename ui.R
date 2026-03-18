@@ -677,11 +677,12 @@ ui <- dashboardPage(
                 )
               ),
               
+              # ---- ONLY CHANGE: plotlyOutput swapped to DT ----
               fluidRow(
                 column(12,
                        box(width = NULL, solidHeader = TRUE,
                            title = "Decade Champion — Who Was On Top Each Decade",
-                           plotlyOutput("decade_champion_bar", height = "400px"))
+                           DT::dataTableOutput("decade_champion_table"))
                 )
               ),
               

@@ -690,54 +690,88 @@ function(input, output, session) {
       )
   })
   
-  output$decade_champion_bar <- renderPlotly({
+  # ---- ONLY CHANGE: decade_champion_bar replaced with decade_champion_table ----
+  output$decade_champion_table <- DT::renderDataTable({
     df <- decade_champions()
     
     if (nrow(df) == 0) {
-      return(plot_ly() %>% layout(title = "No data available"))
+      return(DT::datatable(data.frame(Message = "No data available")))
     }
     
-    unique_teams <- unique(df$Team)
-    ring_colors  <- c("#0085C7", "#EE334E", "#FFD700", "#00A651", "#000000",
-                      "#F39C12", "#8E44AD", "#16A085", "#E74C3C", "#2C3E50")
-    team_colors  <- setNames(ring_colors[seq_along(unique_teams)], unique_teams)
+    flag_codes <- c(
+      "United States"  = "us", "Soviet Union"   = "ru", "Germany"        = "de",
+      "Great Britain"  = "gb", "France"         = "fr", "Australia"      = "au",
+      "Italy"          = "it", "China"          = "cn", "Sweden"         = "se",
+      "Hungary"        = "hu", "East Germany"   = "de", "Russia"         = "ru",
+      "Finland"        = "fi", "Japan"          = "jp", "Norway"         = "no",
+      "Canada"         = "ca", "Netherlands"    = "nl", "South Korea"    = "kr",
+      "Cuba"           = "cu", "Romania"        = "ro", "Poland"         = "pl",
+      "Denmark"        = "dk", "Switzerland"    = "ch", "Austria"        = "at",
+      "Belgium"        = "be", "Unified Team"   = "ru", "Czechoslovakia" = "cz",
+      "West Germany"   = "de", "Bulgaria"       = "bg", "Yugoslavia"     = "rs",
+      "Kenya"          = "ke", "Brazil"         = "br", "Spain"          = "es",
+      "New Zealand"    = "nz", "Jamaica"        = "jm", "Greece"         = "gr"
+    )
     
-    plot_ly(df,
-            x = ~Decade,
-            y = ~n,
-            color = ~Team,
-            colors = team_colors,
-            type = "bar",
-            text = ~paste0("<b>", Team, "</b><br>",
-                           Decade, "<br>",
-                           "Medals: <b>", n, "</b>"),
-            hoverinfo = "text",
-            marker = list(
-              line = list(color = "white", width = 1.5)
-            )) %>%
-      layout(
-        barmode = "stack",
-        xaxis = list(
-          title     = "",
-          tickangle = -45,
-          tickfont  = list(size = 12, color = "#2C3E50"),
-          showgrid  = FALSE
+    df <- df %>%
+      mutate(
+        iso = tolower(flag_codes[Team]),
+        iso = ifelse(is.na(iso), "un", iso),
+        Flag = paste0(
+          '<img src="https://flagcdn.com/32x24/', iso, '.png" ',
+          'width="32" height="24" style="border-radius:3px; ',
+          'box-shadow: 0 1px 4px rgba(0,0,0,0.2);" ',
+          'onerror="this.style.display=\'none\'">'
         ),
-        yaxis = list(
-          title      = "Medals Won",
-          tickfont   = list(size = 12, color = "#2C3E50"),
-          gridcolor  = "#ECF0F1",
-          gridwidth  = 1
-        ),
-        paper_bgcolor = "white",
-        plot_bgcolor  = "white",
-        legend = list(
-          title       = list(text = "<b>Country</b>"),
-          bgcolor     = "rgba(255,255,255,0.9)",
-          bordercolor = "#E0E6ED",
-          borderwidth = 1
-        ),
-        margin = list(l = 60, r = 40, t = 20, b = 80)
+        Medal_Bar = paste0(
+          '<div style="background: linear-gradient(90deg, #FFD700 ',
+          round((n / max(n)) * 100), '%, #f0f4f8 ',
+          round((n / max(n)) * 100), '%); ',
+          'border-radius: 4px; padding: 4px 8px; font-weight: 600; ',
+          'color: #2C3E50;">',
+          n, '</div>'
+        )
+      ) %>%
+      select(Flag, Decade, Team, Medal_Bar) %>%
+      rename(
+        Country = Team,
+        Medals  = Medal_Bar
+      )
+    
+    DT::datatable(
+      df,
+      escape   = FALSE,
+      rownames = FALSE,
+      options  = list(
+        pageLength = 15,
+        dom        = 't',
+        ordering   = FALSE,
+        scrollX    = FALSE,
+        columnDefs = list(
+          list(className = 'dt-center', targets = c(0, 1)),
+          list(width = '50px',  targets = 0),
+          list(width = '100px', targets = 1),
+          list(width = '200px', targets = 2),
+          list(width = '200px', targets = 3)
+        )
+      ),
+      class = 'cell-border stripe'
+    ) %>%
+      DT::formatStyle(
+        'Decade',
+        fontWeight = 'bold',
+        color      = '#0085C7',
+        fontSize   = '15px'
+      ) %>%
+      DT::formatStyle(
+        'Country',
+        fontWeight = '600',
+        color      = '#2C3E50',
+        fontSize   = '14px'
+      ) %>%
+      DT::formatStyle(
+        columns    = 0:3,
+        lineHeight = '40px'
       )
   })
   
