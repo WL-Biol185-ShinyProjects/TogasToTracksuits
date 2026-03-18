@@ -1,5 +1,45 @@
 Olympic_Dataset <- read.csv("athlete_events-Olympic Dataset.csv")
 
+olympic_countries <- c(
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", 
+  "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", 
+  "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan",
+  "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", 
+  "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", 
+  "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", 
+  "Congo (Brazzaville)", "Congo (Kinshasa)", "Costa Rica", "Cote d'Ivoire", "Croatia", 
+  "Cuba", "Cyprus", "Czech Republic", "Czechoslovakia", "Denmark", "Djibouti", 
+  "Dominica", "Dominican Republic", "East Germany", "Ecuador", "Egypt", "El Salvador", 
+  "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "Fiji", "Finland", "France",
+  "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Great Britain", "Greece", 
+  "Grenada", "Guam", "Guatemala", "Guinea", "Guinea Bissau", "Guyana", "Haiti", 
+  "Honduras", "Hong Kong", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq",
+  "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", 
+  "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", 
+  "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
+  "Macedonia", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", 
+  "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", 
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", 
+  "Nauru", "Nepal", "Netherlands", "Netherlands Antilles", "New Zealand", 
+  "Newfoundland", "Nicaragua", "Niger", "Nigeria", "North Korea", "Norway", "Oman",
+  "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", 
+  "Philippines", "Poland", "Portugal", "Puerto Rico", "Qatar", "Refugee Olympic Athletes",
+  "Rhodesia", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", 
+  "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+  "Saudi Arabia", "Senegal", "Serbia", "Serbia and Montenegro", "Seychelles", 
+  "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia",
+  "South Africa", "South Korea", "South Sudan", "Soviet Union", "Spain", "Sri Lanka", 
+  "Sudan", "Suriname", "Swaziland", "Sweden", "Switzerland", "Syria", "Tajikistan", 
+  "Tanzania", "Thailand", "Timor Leste", "Togo", "Tonga", "Trinidad and Tobago", 
+  "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "Unified Team",
+  "United Arab Emirates", "United Arab Republic", "United States", 
+  "United States Virgin Islands", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", 
+  "Vietnam", "West Germany", "West Indies Federation", "Yemen", "Yugoslavia", 
+  "Zambia", "Zimbabwe"
+)
+
+Olympic_Dataset <- read.csv("athlete_events-Olympic Dataset.csv")
+
 library(shiny)
 library(ggplot2)
 library(plotly)
@@ -31,8 +71,6 @@ function(input, output, session) {
   # STARTUP MODAL - FAVORITE COUNTRY SELECTION
   # ===========================================================================
   
-  countries <- sort(unique(olympic_data$Team))
-  
   showModal(modalDialog(
     title = tags$div(
       style = "text-align: center;",
@@ -46,7 +84,7 @@ function(input, output, session) {
       tags$p("Your dashboard will jump straight to your country's Olympic history!",
              style = "color: #7F8C8D; margin-bottom: 20px;"),
       selectInput("modal_country", NULL,
-                  choices = countries,
+                  choices = olympic_countries,
                   selected = "United States",
                   width = "100%")
     ),
@@ -419,9 +457,8 @@ function(input, output, session) {
   # ===========================================================================
   
   observe({
-    countries <- sort(unique(olympic_data$Team))
     updateSelectInput(session, "fav_country",
-                      choices = countries,
+                      choices = olympic_countries,
                       selected = "United States")
   })
   
@@ -642,8 +679,6 @@ function(input, output, session) {
       formatC(format = "d", big.mark = ",")
   })
   
-  # RESTORED: heatmap grid with total medals per country per decade
-  # with improved readable color scale
   output$dominance_heatmap <- renderPlotly({
     df <- decade_summary() %>%
       filter(Team %in% top10_countries())
@@ -652,7 +687,6 @@ function(input, output, session) {
       return(plot_ly() %>% layout(title = "No data available"))
     }
     
-    # Build a complete grid so every country/decade combo exists
     all_decades  <- sort(unique(df$Decade))
     all_teams    <- top10_countries()
     full_grid    <- expand.grid(Decade = all_decades, Team = all_teams,
@@ -689,7 +723,7 @@ function(input, output, session) {
             zmin = 0) %>%
       layout(
         xaxis = list(
-          title    = "",
+          title     = "",
           tickangle = -45,
           tickfont  = list(size = 12, color = "#2C3E50"),
           showgrid  = FALSE
@@ -705,7 +739,6 @@ function(input, output, session) {
       )
   })
   
-  # UPDATED: decade champion table with flag, gold/silver/bronze dots AND total
   output$decade_champion_table <- DT::renderDataTable({
     df <- decade_champions()
     
