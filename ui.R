@@ -385,9 +385,8 @@ ui <- dashboardPage(
                              tags$li(icon("trophy"), " Interactive charts and country comparisons"),
                              tags$li(icon("download"), " Export capabilities for deeper analysis")
                            )
-                         ),  # <--- COMMA ADDED!
+                         ), 
                          
-                         # NEW FUN FACTS BOXES BELOW:
                          tags$div(
                            class = "feature-box",
                            style = "border-left-color: #EE334E; margin-top: 30px;",
