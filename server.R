@@ -892,5 +892,19 @@ function(input, output, session) {
         hovermode = "x unified"
       )
   })
+  # ===========================================================================
+  # DOWNLOAD HANDLER - MY COUNTRY DATA
+  # ===========================================================================
   
+  output$download_country <- downloadHandler(
+    filename = function() {
+      paste0(input$fav_country, "_Olympic_Medals_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      data_to_download <- fav_country_df() %>%
+        select(Year, Season, City, Sport, Event, Name, Sex, Age, Height, Weight, Medal, NOC) %>%
+        arrange(desc(Year), Medal)
+      write.csv(data_to_download, file, row.names = FALSE)
+    }
+  )
 }

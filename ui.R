@@ -611,7 +611,11 @@ ui <- dashboardPage(
                                        choices = NULL,
                                        selected = NULL),
                            hr(),
-                           helpText(icon("info-circle"), " Select your country to see its complete Olympic history.")
+                           downloadButton("download_country", "Download My Data", 
+                                          class = "btn-primary", 
+                                          style = "width: 100%; margin-top: 10px;"),
+                           hr(),
+                           helpText(icon("info-circle"), " Select your country to see its complete Olympic history and download the data.")
                        )
                 ),
                 column(8,
@@ -706,7 +710,6 @@ ui <- dashboardPage(
                 )
               ),
               
-              # ---- ONLY CHANGE: plotlyOutput swapped to DT ----
               fluidRow(
                 column(12,
                        box(width = NULL, solidHeader = TRUE,
