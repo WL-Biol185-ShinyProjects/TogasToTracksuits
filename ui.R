@@ -428,13 +428,13 @@ ui <- dashboardPage(
               
               fluidRow(
                 column(3, div(class = "metric-card",
-                              h4("Total Medals"), h2("39,783"))),
+                              h4("🏅 Total Medals"), h2("39,783"))),
                 column(3, div(class = "metric-card",
-                              h4("Athletes"), h2("134,732"))),
+                              h4("👥 Athletes"), h2("134,732"))),
                 column(3, div(class = "metric-card",
-                              h4("Countries"), h2("230"))),
+                              h4("🌍 Countries"), h2("230"))),
                 column(3, div(class = "metric-card",
-                              h4("Sports"), h2("66")))
+                              h4("⚽ Sports"), h2("66")))
               ),
               
               br(),
