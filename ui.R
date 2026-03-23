@@ -385,6 +385,36 @@ ui <- dashboardPage(
                              tags$li(icon("trophy"), " Interactive charts and country comparisons"),
                              tags$li(icon("download"), " Export capabilities for deeper analysis")
                            )
+                         ),  # <--- COMMA ADDED!
+                         
+                         # NEW FUN FACTS BOXES BELOW:
+                         tags$div(
+                           class = "feature-box",
+                           style = "border-left-color: #EE334E; margin-top: 30px;",
+                           tags$h4(icon("lightbulb"), " Did You Know? Olympic Fun Facts"),
+                           tags$ul(
+                             tags$li(icon("medal"), " Michael Phelps holds the all-time record with 28 Olympic medals (23 gold!)"),
+                             tags$li(icon("calendar"), " The Olympics were cancelled 3 times: 1916 (WWI), 1940 & 1944 (WWII)"),
+                             tags$li(icon("users"), " Over 134,000 athletes have competed since the first modern Olympics in 1896"),
+                             tags$li(icon("trophy"), " The United States leads the all-time medal count with over 2,800 medals"),
+                             tags$li(icon("female"), " Women first competed in the 1900 Paris Olympics - only 22 out of 997 athletes"),
+                             tags$li(icon("flag"), " The Olympic flag's five rings represent the five inhabited continents of the world"),
+                             tags$li(icon("fire"), " The Olympic flame is lit in Olympia, Greece, before each Games"),
+                             tags$li(icon("running"), " The youngest Olympic gold medalist was 13 years old (Marjorie Gestring, diving, 1936)")
+                           )
+                         ),
+                         
+                         tags$div(
+                           class = "feature-box",
+                           style = "border-left-color: #00A651; margin-top: 30px;",
+                           tags$h4(icon("chart-bar"), " Dataset Highlights"),
+                           tags$ul(
+                             tags$li(icon("database"), " This dataset covers 120 years of Olympic history (1896-2016)"),
+                             tags$li(icon("globe"), " 230 countries and territories have participated in the Olympic Games"),
+                             tags$li(icon("running"), " Athletics (Track & Field) has the most events of any Olympic sport"),
+                             tags$li(icon("snowflake"), " Winter Olympics were first held separately in 1924 in Chamonix, France"),
+                             tags$li(icon("star"), " Gymnast Larisa Latynina held the record for most medals (18) for 48 years")
+                           )
                          )
                        )
                 )
