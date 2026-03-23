@@ -491,13 +491,13 @@ ui <- dashboardPage(
               
               fluidRow(
                 column(3, div(class = "metric-card",
-                              h4("Total Medals"), h2(textOutput("athlete_total_medals", inline = TRUE)))),
+                              h4("🏅 Total Medals"), h2(textOutput("athlete_total_medals", inline = TRUE)))),
                 column(3, div(class = "metric-card",
-                              h4("Gold"), h2(textOutput("athlete_gold", inline = TRUE)))),
+                              h4("🥇 Gold"), h2(textOutput("athlete_gold", inline = TRUE)))),
                 column(3, div(class = "metric-card",
-                              h4("Silver"), h2(textOutput("athlete_silver", inline = TRUE)))),
+                              h4("🥈 Silver"), h2(textOutput("athlete_silver", inline = TRUE)))),
                 column(3, div(class = "metric-card",
-                              h4("Bronze"), h2(textOutput("athlete_bronze", inline = TRUE))))
+                              h4("🥉 Bronze"), h2(textOutput("athlete_bronze", inline = TRUE))))
               ),
               
               br(),
@@ -621,13 +621,13 @@ ui <- dashboardPage(
                 column(8,
                        fluidRow(
                          column(3, div(class = "metric-card",
-                                       h4("Total Medals"), h2(textOutput("fav_total_medals", inline = TRUE)))),
+                                       h4("🏅 Total Medals"), h2(textOutput("fav_total_medals", inline = TRUE)))),
                          column(3, div(class = "metric-card",
-                                       h4("Gold"), h2(textOutput("fav_gold", inline = TRUE)))),
+                                       h4("🥇 Gold"), h2(textOutput("fav_gold", inline = TRUE)))),
                          column(3, div(class = "metric-card",
-                                       h4("Silver"), h2(textOutput("fav_silver", inline = TRUE)))),
+                                       h4("🥈 Silver"), h2(textOutput("fav_silver", inline = TRUE)))),
                          column(3, div(class = "metric-card",
-                                       h4("Bronze"), h2(textOutput("fav_bronze", inline = TRUE))))
+                                       h4("🥉 Bronze"), h2(textOutput("fav_bronze", inline = TRUE))))
                        )
                 )
               ),
