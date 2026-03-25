@@ -905,6 +905,81 @@ function(input, output, session) {
         hovermode = "x unified"
       )
   })
+  # ===========================================================================
+  # MOST IMPROVED TAB
+  # ===========================================================================
+  
+  improved_df <- reactive({
+    df <- medal_data %>%
+      filter(Medal %in% c("Gold", "Silver", "Bronze"))
+    
+    if (input$improved_medal == "Gold") {
+      df <- df %>% filter(Medal == "Gold")
+    }
+    
+    nineties <- df %>%
+      filter(Year >= 1990, Year <= 1999) %>%
+      count(Team) %>%
+      rename(Medals_1990s = n)
+    
+    twenty_tens <- df %>%
+      filter(Year >= 2010, Year <= 2016) %>%
+      count(Team) %>%
+      rename(Medals_2010s = n)
+    
+    improved <- nineties %>%
+      inner_join(twenty_tens, by = "Team") %>%
+      mutate(Improvement = Medals_2010s - Medals_1990s) %>%
+      arrange(desc(Improvement))
+    
+    return(improved)
+  })
+  
+  output$top_improved_country <- renderText({
+    improved_df() %>% slice(1) %>% pull(Team)
+  })
+  
+  output$top_improved_then <- renderText({
+    improved_df() %>% slice(1) %>% pull(Medals_1990s)
+  })
+  
+  output$top_improved_now <- renderText({
+    improved_df() %>% slice(1) %>% pull(Medals_2010s)
+  })
+  
+  output$most_improved_bar <- renderPlotly({
+    df <- improved_df() %>% head(15)
+    
+    df <- df %>%
+      mutate(Team = factor(Team, levels = rev(Team)))
+    
+    plot_ly(df, x = ~Improvement, y = ~Team,
+            type = "bar", orientation = "h",
+            marker = list(color = "#0085C7",
+                          line = list(color = "#005A8C", width = 1)),
+            text = ~paste0("+", Improvement, " medals"),
+            textposition = "outside",
+            hoverinfo = "y+text") %>%
+      layout(
+        xaxis = list(title = "Medal Increase (1990s → 2010s)"),
+        yaxis = list(title = ""),
+        paper_bgcolor = "white",
+        plot_bgcolor  = "white"
+      )
+  })
+  
+  output$most_improved_table <- DT::renderDataTable({
+    df <- improved_df() %>%
+      head(20) %>%
+      mutate(Change = paste0(ifelse(Improvement > 0, "+", ""), Improvement)) %>%
+      select(Team, Medals_1990s, Medals_2010s, Change) %>%
+      rename(Country = Team, `1990s Medals` = Medals_1990s,
+             `2010s Medals` = Medals_2010s)
+    
+    DT::datatable(df,
+                  options = list(pageLength = 20, dom = 't', scrollX = TRUE),
+                  rownames = FALSE)
+  })
   
   # ===========================================================================
   # DOWNLOAD HANDLER - MY COUNTRY DATA

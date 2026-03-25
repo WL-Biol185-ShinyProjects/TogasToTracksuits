@@ -68,7 +68,8 @@ ui <- dashboardPage(
       menuItem("Countries",       tabName = "countries",  icon = icon("flag")),
       menuItem("Sports",          tabName = "sports",     icon = icon("running")),
       menuItem("My Country",      tabName = "my_country", icon = icon("star")),
-      menuItem("Dominance Index", tabName = "dominance",  icon = icon("trophy"))
+      menuItem("Dominance Index", tabName = "dominance",  icon = icon("trophy")),
+      menuItem("Most Improved", tabName = "improved", icon = icon("arrow-up"))
     )
   ),
   
@@ -735,8 +736,56 @@ ui <- dashboardPage(
                            plotlyOutput("dominance_line", height = "400px"))
                 )
               )
+      ),
+      
+      # ========================================
+      # MOST IMPROVED TAB
+      # ========================================
+      tabItem(tabName = "improved",
+              h2(icon("arrow-up"), " Most Improved Countries"),
+              
+              fluidRow(
+                column(4,
+                       box(width = NULL, status = "primary", solidHeader = TRUE,
+                           title = "Controls",
+                           radioButtons("improved_medal", "Medal Type:",
+                                        choices = c("All Medals" = "all", "Gold Only" = "Gold"),
+                                        selected = "all", inline = TRUE),
+                           hr(),
+                           helpText(icon("info-circle"), " Shows countries with the biggest medal count improvement from the 1990s to the 2010s.")
+                       )
+                ),
+                column(8,
+                       fluidRow(
+                         column(4, div(class = "metric-card",
+                                       h4("🏆 Most Improved"), h2(textOutput("top_improved_country", inline = TRUE)))),
+                         column(4, div(class = "metric-card",
+                                       h4("📈 Medals Then"), h2(textOutput("top_improved_then", inline = TRUE)))),
+                         column(4, div(class = "metric-card",
+                                       h4("🚀 Medals Now"), h2(textOutput("top_improved_now", inline = TRUE))))
+                       )
+                )
+              ),
+              
+              br(),
+              
+              fluidRow(
+                column(12,
+                       box(width = NULL, solidHeader = TRUE,
+                           title = "Top 15 Most Improved Countries (1990s vs 2010s)",
+                           plotlyOutput("most_improved_bar", height = "500px"))
+                )
+              ),
+              
+              fluidRow(
+                column(12,
+                       box(width = NULL, solidHeader = TRUE,
+                           title = "Improvement Breakdown",
+                           DT::dataTableOutput("most_improved_table"))
+                )
+              )
       )
       
-    )
-  )
-)
+    )   
+  )    
+)       
