@@ -572,11 +572,11 @@ ui <- dashboardPage(
                 column(8,
                        fluidRow(
                          column(4, div(class = "metric-card",
-                                       h4("Total Medals"), h2(textOutput("sport_medals", inline = TRUE)))),
+                                       h4("🏅 Total Medals"), h2(textOutput("sport_medals", inline = TRUE)))),
                          column(4, div(class = "metric-card",
-                                       h4("Athletes"), h2(textOutput("sport_athletes", inline = TRUE)))),
+                                       h4("👥 Athletes"), h2(textOutput("sport_athletes", inline = TRUE)))),
                          column(4, div(class = "metric-card",
-                                       h4("Countries"), h2(textOutput("sport_countries", inline = TRUE))))
+                                       h4("🌍 Countries"), h2(textOutput("sport_countries", inline = TRUE))))
                        )
                 )
               ),
