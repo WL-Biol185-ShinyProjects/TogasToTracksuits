@@ -311,8 +311,13 @@ function(input, output, session) {
     
     df <- medal_data %>%
       filter(Team %in% c(input$country1, input$country2),
-             Medal %in% c("Gold", "Silver", "Bronze")) %>%
-      count(Team, Medal)
+             Medal %in% c("Gold", "Silver", "Bronze"))
+    
+    if (input$country_gender != "both") {
+      df <- df %>% filter(Sex == input$country_gender)
+    }
+    
+    df <- df %>% count(Team, Medal)
     
     if (nrow(df) == 0) {
       return(plot_ly() %>% layout(title = "No medal data found for selected countries"))
@@ -339,8 +344,13 @@ function(input, output, session) {
     
     df <- medal_data %>%
       filter(Team %in% c(input$country1, input$country2),
-             Medal %in% c("Gold", "Silver", "Bronze")) %>%
-      count(Year, Team)
+             Medal %in% c("Gold", "Silver", "Bronze"))
+    
+    if (input$country_gender != "both") {
+      df <- df %>% filter(Sex == input$country_gender)
+    }
+    
+    df <- df %>% count(Year, Team)
     
     if (nrow(df) == 0) {
       return(plot_ly() %>% layout(title = "No medal data found for selected countries"))

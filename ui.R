@@ -534,9 +534,13 @@ ui <- dashboardPage(
                            selectInput("country2", "Country 2:",
                                        choices = olympic_countries, selected = "China"),
                            hr(),
+                           radioButtons("country_gender", "Gender:",
+                                        choices = c("Both" = "both", "Male" = "M", "Female" = "F"),
+                                        selected = "both", inline = TRUE),
+                           hr(),
                            helpText(icon("info-circle"), " Compare Olympic performance between any two nations.")
-                       )
-                ),
+                )
+                  ),
                 column(8,
                        box(width = NULL, solidHeader = TRUE,
                            title = "Medal Comparison",
