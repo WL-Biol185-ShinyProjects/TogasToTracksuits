@@ -385,7 +385,7 @@ ui <- dashboardPage(
                              tags$li(icon("trophy"), " Interactive charts and country comparisons"),
                              tags$li(icon("download"), " Export capabilities for deeper analysis")
                            )
-                         ), 
+                         ),
                          
                          tags$div(
                            class = "feature-box",
@@ -566,6 +566,12 @@ ui <- dashboardPage(
                            selectInput("sport_select", "Choose a Sport:",
                                        choices = NULL, selected = NULL),
                            hr(),
+                           selectInput("sport_gender", "Gender:",
+                                       choices = c("Both"   = "both",
+                                                   "Male"   = "M",
+                                                   "Female" = "F"),
+                                       selected = "both"),
+                           hr(),
                            helpText(icon("info-circle"), " Analyze performance trends for any Olympic sport.")
                        )
                 ),
@@ -611,8 +617,8 @@ ui <- dashboardPage(
                                        choices = NULL,
                                        selected = NULL),
                            hr(),
-                           downloadButton("download_country", "Download My Data", 
-                                          class = "btn-primary", 
+                           downloadButton("download_country", "Download My Data",
+                                          class = "btn-primary",
                                           style = "width: 100%; margin-top: 10px;"),
                            hr(),
                            helpText(icon("info-circle"), " Select your country to see its complete Olympic history and download the data.")

@@ -38,8 +38,6 @@ olympic_countries <- c(
   "Zambia", "Zimbabwe"
 )
 
-Olympic_Dataset <- read.csv("athlete_events-Olympic Dataset.csv")
-
 library(shiny)
 library(ggplot2)
 library(plotly)
@@ -371,9 +369,14 @@ function(input, output, session) {
                       selected = sports[1])
   })
   
+  # UPDATED: now filters by gender
   sport_df <- reactive({
     req(input$sport_select)
-    olympic_data %>% filter(Sport == input$sport_select)
+    df <- olympic_data %>% filter(Sport == input$sport_select)
+    if (input$sport_gender != "both") {
+      df <- df %>% filter(Sex == input$sport_gender)
+    }
+    return(df)
   })
   
   sport_medals_df <- reactive({
@@ -892,6 +895,7 @@ function(input, output, session) {
         hovermode = "x unified"
       )
   })
+  
   # ===========================================================================
   # DOWNLOAD HANDLER - MY COUNTRY DATA
   # ===========================================================================
