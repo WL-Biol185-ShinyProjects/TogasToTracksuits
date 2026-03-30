@@ -379,7 +379,6 @@ function(input, output, session) {
                       selected = sports[1])
   })
   
-  # UPDATED: now filters by gender
   sport_df <- reactive({
     req(input$sport_select)
     df <- olympic_data %>% filter(Sport == input$sport_select)
@@ -905,6 +904,7 @@ function(input, output, session) {
         hovermode = "x unified"
       )
   })
+  
   # ===========================================================================
   # MOST IMPROVED TAB
   # ===========================================================================
@@ -979,6 +979,279 @@ function(input, output, session) {
     DT::datatable(df,
                   options = list(pageLength = 20, dom = 't', scrollX = TRUE),
                   rownames = FALSE)
+  })
+  
+  # ===========================================================================
+  # MEDAL MAP TAB  — NEW
+  # ===========================================================================
+  
+  # NOC -> country name + ISO2 flag code + lat/lon for all 230 NOCs in dataset
+  noc_lookup <- data.frame(
+    NOC = c(
+      "AFG","AHO","ALB","ALG","AND","ANG","ANT","ANZ","ARG","ARM",
+      "ARU","ASA","AUS","AUT","AZE","BAH","BAN","BAR","BDI","BEL",
+      "BEN","BER","BHU","BIH","BIZ","BLR","BOH","BOL","BOT","BRA",
+      "BRN","BRU","BUL","BUR","CAF","CAM","CAN","CAY","CGO","CHA",
+      "CHI","CHN","CIV","CMR","COD","COK","COL","COM","CPV","CRC",
+      "CRO","CRT","CUB","CYP","CZE","DEN","DJI","DMA","DOM","ECU",
+      "EGY","ERI","ESA","ESP","EST","ETH","EUN","FIJ","FIN","FRA",
+      "FRG","FSM","GAB","GAM","GBR","GBS","GDR","GEO","GEQ","GER",
+      "GHA","GRE","GRN","GUA","GUI","GUM","GUY","HAI","HKG","HON",
+      "HUN","INA","IND","IOA","IRI","IRL","IRQ","ISL","ISR","ISV",
+      "ITA","IVB","JAM","JOR","JPN","KAZ","KEN","KGZ","KIR","KOR",
+      "KOS","KSA","KUW","LAO","LAT","LBA","LBR","LCA","LES","LIB",
+      "LIE","LTU","LUX","MAD","MAL","MAR","MAS","MAW","MDA","MDV",
+      "MEX","MGL","MHL","MKD","MLI","MLT","MNE","MON","MOZ","MRI",
+      "MTN","MYA","NAM","NBO","NCA","NED","NEP","NFL","NGR","NIG",
+      "NOR","NRU","NZL","OMA","PAK","PAN","PAR","PER","PHI","PLE",
+      "PLW","PNG","POL","POR","PRK","PUR","QAT","RHO","ROT","ROU",
+      "RSA","RUS","RWA","SAA","SAM","SCG","SEN","SEY","SGP","SKN",
+      "SLE","SLO","SMR","SOL","SOM","SRB","SRI","SSD","STP","SUD",
+      "SUI","SUR","SVK","SWE","SWZ","SYR","TAN","TCH","TGA","THA",
+      "TJK","TKM","TLS","TOG","TPE","TTO","TUN","TUR","TUV","UAE",
+      "UAR","UGA","UKR","UNK","URS","URU","USA","UZB","VAN","VEN",
+      "VIE","VIN","VNM","WIF","YAR","YEM","YMD","YUG","ZAM","ZIM"
+    ),
+    Country = c(
+      "Afghanistan","Netherlands Antilles","Albania","Algeria","Andorra","Angola",
+      "Antigua and Barbuda","Australasia","Argentina","Armenia","Aruba","American Samoa",
+      "Australia","Austria","Azerbaijan","Bahamas","Bangladesh","Barbados","Burundi",
+      "Belgium","Benin","Bermuda","Bhutan","Bosnia & Herzegovina","Belize","Belarus",
+      "Bohemia","Bolivia","Botswana","Brazil","Bahrain","Brunei","Bulgaria",
+      "Burkina Faso","Central African Rep.","Cambodia","Canada","Cayman Islands",
+      "Congo","Chad","Chile","China","Cote d'Ivoire","Cameroon","DR Congo",
+      "Cook Islands","Colombia","Comoros","Cape Verde","Costa Rica","Croatia","Crete",
+      "Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominica",
+      "Dominican Republic","Ecuador","Egypt","Eritrea","El Salvador","Spain","Estonia",
+      "Ethiopia","Unified Team","Fiji","Finland","France","West Germany","Micronesia",
+      "Gabon","Gambia","Great Britain","Guinea-Bissau","East Germany","Georgia",
+      "Equatorial Guinea","Germany","Ghana","Greece","Grenada","Guatemala","Guinea",
+      "Guam","Guyana","Haiti","Hong Kong","Honduras","Hungary","Indonesia","India",
+      "Indep. Olympic Athletes","Iran","Ireland","Iraq","Iceland","Israel",
+      "US Virgin Islands","Italy","British Virgin Islands","Jamaica","Jordan","Japan",
+      "Kazakhstan","Kenya","Kyrgyzstan","Kiribati","South Korea","Kosovo",
+      "Saudi Arabia","Kuwait","Laos","Latvia","Libya","Liberia","Saint Lucia",
+      "Lesotho","Lebanon","Liechtenstein","Lithuania","Luxembourg","Madagascar",
+      "Malaysia (historical)","Morocco","Malaysia","Malawi","Moldova","Maldives",
+      "Mexico","Mongolia","Marshall Islands","North Macedonia","Mali","Malta",
+      "Montenegro","Monaco","Mozambique","Mauritius","Mauritania","Myanmar","Namibia",
+      "Kenya (historical)","Nicaragua","Netherlands","Nepal","Newfoundland","Nigeria",
+      "Niger","Norway","Nauru","New Zealand","Oman","Pakistan","Panama","Paraguay",
+      "Peru","Philippines","Palestine","Palau","Papua New Guinea","Poland","Portugal",
+      "North Korea","Puerto Rico","Qatar","Rhodesia","Refugee Athletes","Romania",
+      "South Africa","Russia","Rwanda","Saar","Samoa","Serbia & Montenegro","Senegal",
+      "Seychelles","Singapore","St Kitts & Nevis","Sierra Leone","Slovenia",
+      "San Marino","Solomon Islands","Somalia","Serbia","Sri Lanka","South Sudan",
+      "Sao Tome & Principe","Sudan","Switzerland","Suriname","Slovakia","Sweden",
+      "Eswatini","Syria","Tanzania","Czechoslovakia","Tonga","Thailand","Tajikistan",
+      "Turkmenistan","Timor-Leste","Togo","Chinese Taipei","Trinidad & Tobago",
+      "Tunisia","Turkey","Tuvalu","UAE","United Arab Republic","Uganda","Ukraine",
+      "Unknown","Soviet Union","Uruguay","United States","Uzbekistan","Vanuatu",
+      "Venezuela","Vietnam","St Vincent & Grenadines","Vietnam (historical)",
+      "West Indies Fed.","North Yemen","Yemen","South Yemen","Yugoslavia","Zambia","Zimbabwe"
+    ),
+    iso2 = c(
+      "af","an","al","dz","ad","ao","ag","au","ar","am","aw","as","au","at","az",
+      "bs","bd","bb","bi","be","bj","bm","bt","ba","bz","by","cz","bo","bw","br",
+      "bh","bn","bg","bf","cf","kh","ca","ky","cg","td","cl","cn","ci","cm","cd",
+      "ck","co","km","cv","cr","hr","gr","cu","cy","cz","dk","dj","dm","do","ec",
+      "eg","er","sv","es","ee","et","ru","fj","fi","fr","de","fm","ga","gm","gb",
+      "gw","de","ge","gq","de","gh","gr","gd","gt","gn","gu","gy","ht","hk","hn",
+      "hu","id","in","un","ir","ie","iq","is","il","vi","it","vg","jm","jo","jp",
+      "kz","ke","kg","ki","kr","xk","sa","kw","la","lv","ly","lr","lc","ls","lb",
+      "li","lt","lu","mg","my","ma","my","mw","md","mv","mx","mn","mh","mk","ml",
+      "mt","me","mc","mz","mu","mr","mm","na","ke","ni","nl","np","ca","ng","ne",
+      "no","nr","nz","om","pk","pa","py","pe","ph","ps","pw","pg","pl","pt","kp",
+      "pr","qa","zw","un","ro","za","ru","rw","de","ws","rs","sn","sc","sg","kn",
+      "sl","si","sm","sb","so","rs","lk","ss","st","sd","ch","sr","sk","se","sz",
+      "sy","tz","cz","to","th","tj","tm","tl","tg","tw","tt","tn","tr","tv","ae",
+      "eg","ug","ua","un","ru","uy","us","uz","vu","ve","vn","vc","vn","jm","ye",
+      "ye","ye","rs","zm","zw"
+    ),
+    lat = c(
+      33.93,12.23,41.15,28.03,42.55,-11.20,17.07,-25.27,-38.42,40.07,
+      12.50,-14.27,-25.27,47.52,40.14,25.03,23.68,13.19,-3.38,50.50,
+      9.31,32.31,27.51,43.92,17.19,53.71,50.08,-16.29,-22.33,-14.24,
+      26.02,4.53,42.73,12.36,6.61,12.57,56.13,19.31,-0.23,15.45,
+      -35.68,35.86,7.54,3.85,-4.04,-21.24,4.57,-11.88,16.00,9.75,
+      45.10,35.24,21.52,35.13,49.82,56.26,11.83,15.41,18.74,-1.83,
+      26.82,15.18,13.79,40.46,58.60,9.15,55.00,-18.12,61.92,46.23,
+      51.17,6.92,-0.80,13.44,55.38,11.80,52.13,42.32,1.65,51.17,
+      7.95,39.07,12.11,15.78,9.95,13.44,4.86,18.97,22.40,15.20,
+      47.16,-0.79,20.59,0.00,32.43,53.41,33.22,64.96,31.05,17.73,
+      41.87,18.42,18.11,31.24,36.20,48.02,-0.02,41.20,-1.03,35.91,
+      42.60,24.21,29.31,19.86,56.88,26.34,6.43,13.90,-29.62,33.85,
+      47.17,55.17,49.82,-18.77,3.15,31.79,2.50,-13.25,47.41,3.20,
+      23.63,46.86,7.13,41.61,17.57,31.79,0.00,-21.17,3.92,-20.35,
+      20.87,16.87,-22.96,0.00,12.86,52.13,28.39,47.00,10.45,17.61,
+      60.47,-0.52,-40.90,21.51,30.37,8.54,-23.44,-9.19,12.88,31.95,
+      7.52,-6.31,51.92,39.40,40.34,18.22,25.35,-19.02,0.00,45.94,
+      -30.56,61.52,-1.94,0.00,-13.76,44.02,14.50,-4.68,1.35,17.36,
+      8.46,46.15,43.94,-9.43,5.15,44.02,7.87,6.88,0.34,15.55,
+      46.82,3.92,48.67,60.13,-26.52,34.80,-6.37,49.82,-21.18,15.87,
+      38.86,40.00,-8.87,8.62,23.70,10.69,33.89,38.96,-7.11,23.42,
+      26.82,1.37,48.38,0.00,61.52,-32.52,37.09,41.38,-15.38,6.42,
+      14.06,12.98,14.06,17.19,15.55,15.55,15.55,44.02,-13.13,-20.00
+    ),
+    lon = c(
+      67.71,68.97,20.17,1.66,1.52,17.87,-61.79,133.78,-63.62,45.04,
+      -69.97,-170.13,133.78,14.55,47.58,-77.40,90.36,-59.54,29.92,4.47,
+      2.31,-64.77,90.43,17.67,-88.49,27.95,14.47,-64.67,24.68,-51.93,
+      50.55,114.73,25.49,-1.56,20.94,104.99,-106.35,-81.25,15.83,18.73,
+      -71.54,104.20,-5.55,11.50,21.76,159.78,-74.07,43.87,-24.01,-83.75,
+      15.20,23.73,-79.52,33.43,15.47,9.50,42.59,-61.37,-69.99,-77.40,
+      30.80,39.78,-88.90,-3.75,25.01,40.49,50.00,179.41,25.75,2.21,
+      9.01,158.22,11.67,-15.31,-3.44,-15.18,13.40,43.36,10.27,10.45,
+      -1.02,21.82,-61.68,-90.23,-11.40,144.79,-58.93,-72.34,114.11,-86.24,
+      19.50,113.92,78.96,0.00,53.69,-8.24,43.68,-18.49,34.85,-64.90,
+      12.57,-64.64,-77.30,35.94,138.25,66.92,37.91,74.77,173.02,127.77,
+      20.90,45.08,47.48,102.50,24.60,17.23,-9.43,-60.98,28.23,35.50,
+      9.55,23.88,6.13,46.87,101.97,-7.09,109.80,34.30,28.37,35.86,
+      -102.55,103.85,171.18,21.75,-4.00,-7.09,14.37,57.55,-15.18,57.55,
+      -5.83,96.68,17.08,0.00,-85.21,5.29,84.12,-62.75,8.08,-1.01,
+      8.47,166.93,172.50,57.55,69.35,-80.78,-58.44,-75.02,121.77,35.23,
+      134.58,143.96,19.15,-8.22,127.51,-66.49,51.18,29.87,30.00,24.97,
+      22.94,100.48,104.22,0.00,-15.31,21.01,14.37,55.49,103.82,-62.78,
+      -11.78,14.99,12.46,160.16,46.20,21.01,80.77,31.30,6.73,32.29,
+      8.23,-56.03,19.70,18.64,31.47,38.99,34.89,15.47,-26.32,30.22,
+      71.27,59.56,125.73,1.22,120.97,-61.22,9.54,35.24,177.64,53.85,
+      30.80,32.29,31.17,0.00,90.00,-55.76,-95.71,64.59,166.92,-66.59,
+      108.28,-61.20,108.28,-61.79,44.47,44.47,44.47,21.01,27.85,30.00
+    ),
+    stringsAsFactors = FALSE
+  )
+  
+  # Populate year dropdown
+  observe({
+    years <- sort(unique(olympic_data$Year))
+    updateSelectInput(session, "map_year",
+                      choices = c("All Years" = "all", setNames(years, years)),
+                      selected = "all")
+  })
+  
+  # Reactive filtered data for map
+  map_data <- reactive({
+    df <- medal_data %>%
+      filter(Medal %in% c("Gold", "Silver", "Bronze"))
+    
+    if (!is.null(input$map_year) && input$map_year != "all") {
+      df <- df %>% filter(Year == as.integer(input$map_year))
+    }
+    
+    if (!is.null(input$map_medal) && input$map_medal != "all") {
+      df <- df %>% filter(Medal == input$map_medal)
+    }
+    
+    if (!is.null(input$map_season) && input$map_season != "both") {
+      df <- df %>% filter(Season == input$map_season)
+    }
+    
+    df %>%
+      group_by(NOC) %>%
+      summarise(
+        Gold   = sum(Medal == "Gold"),
+        Silver = sum(Medal == "Silver"),
+        Bronze = sum(Medal == "Bronze"),
+        Total  = n(),
+        .groups = "drop"
+      ) %>%
+      inner_join(noc_lookup, by = "NOC") %>%
+      filter(!is.na(lat), !is.na(lon))
+  })
+  
+  # Render leaflet map
+  output$medal_map <- renderLeaflet({
+    df <- map_data()
+    
+    if (nrow(df) == 0) {
+      return(leaflet() %>% addTiles() %>%
+               addPopups(0, 20, "No medal data for the selected filters."))
+    }
+    
+    df <- df %>% mutate(radius = pmax(sqrt(Total) * 2.5, 5))
+    
+    df <- df %>%
+      mutate(popup_html = paste0(
+        "<div style='font-family:sans-serif; min-width:190px;'>",
+        "<div style='display:flex; align-items:center; margin-bottom:8px;'>",
+        "<img src='https://flagcdn.com/32x24/", tolower(iso2), ".png' ",
+        "style='margin-right:10px; border-radius:3px; ",
+        "box-shadow:0 1px 4px rgba(0,0,0,0.3);' ",
+        "onerror=\"this.style.display='none'\">",
+        "<strong style='font-size:15px; color:#0085C7;'>", Country, "</strong>",
+        "</div>",
+        "<table style='width:100%; border-collapse:collapse;'>",
+        "<tr><td style='padding:3px 6px;'>",
+        "<span style='color:#DAA520; font-weight:700;'>&#9679;</span> Gold</td>",
+        "<td style='text-align:right; font-weight:600;'>", Gold, "</td></tr>",
+        "<tr><td style='padding:3px 6px;'>",
+        "<span style='color:#909090; font-weight:700;'>&#9679;</span> Silver</td>",
+        "<td style='text-align:right; font-weight:600;'>", Silver, "</td></tr>",
+        "<tr><td style='padding:3px 6px;'>",
+        "<span style='color:#8B4513; font-weight:700;'>&#9679;</span> Bronze</td>",
+        "<td style='text-align:right; font-weight:600;'>", Bronze, "</td></tr>",
+        "<tr style='border-top:1px solid #eee;'>",
+        "<td style='padding:5px 6px; font-weight:700;'>Total</td>",
+        "<td style='text-align:right; font-weight:700; color:#0085C7;'>",
+        Total, "</td></tr>",
+        "</table></div>"
+      ))
+    
+    leaflet(df) %>%
+      addProviderTiles(providers$CartoDB.Positron) %>%
+      setView(lng = 10, lat = 20, zoom = 2) %>%
+      addCircleMarkers(
+        lng          = ~lon,
+        lat          = ~lat,
+        radius       = ~radius,
+        color        = "#005A8C",
+        fillColor    = "#FFD700",
+        fillOpacity  = 0.75,
+        weight       = 1.5,
+        popup        = ~popup_html,
+        label        = ~paste0(Country, ": ", Total, " medals"),
+        labelOptions = labelOptions(
+          style = list(
+            "font-family" = "sans-serif",
+            "font-weight" = "bold",
+            "padding"     = "4px 8px"
+          )
+        )
+      )
+  })
+  
+  # Medal table below the map
+  output$map_medal_table <- DT::renderDataTable({
+    df <- map_data() %>%
+      arrange(desc(Total)) %>%
+      mutate(
+        Flag = paste0(
+          '<img src="https://flagcdn.com/24x18/', tolower(iso2),
+          '.png" style="border-radius:2px; margin-right:6px;" ',
+          'onerror="this.style.display=\'none\'">',
+          Country
+        )
+      ) %>%
+      select(Flag, NOC, Gold, Silver, Bronze, Total)
+    
+    DT::datatable(
+      df,
+      escape   = FALSE,
+      rownames = FALSE,
+      options  = list(
+        pageLength = 15,
+        scrollX    = TRUE,
+        order      = list(list(5, "desc")),
+        columnDefs = list(
+          list(className = "dt-center", targets = c(1, 2, 3, 4, 5))
+        )
+      ),
+      colnames = c("Country", "NOC", "🥇 Gold", "🥈 Silver", "🥉 Bronze", "Total")
+    ) %>%
+      DT::formatStyle("Gold",   color = "#DAA520", fontWeight = "bold") %>%
+      DT::formatStyle("Silver", color = "#909090", fontWeight = "bold") %>%
+      DT::formatStyle("Bronze", color = "#8B4513", fontWeight = "bold") %>%
+      DT::formatStyle("Total",  color = "#0085C7", fontWeight = "bold")
   })
   
   # ===========================================================================

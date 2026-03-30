@@ -69,7 +69,8 @@ ui <- dashboardPage(
       menuItem("Sports",          tabName = "sports",     icon = icon("running")),
       menuItem("My Country",      tabName = "my_country", icon = icon("star")),
       menuItem("Dominance Index", tabName = "dominance",  icon = icon("trophy")),
-      menuItem("Most Improved", tabName = "improved", icon = icon("arrow-up"))
+      menuItem("Most Improved",   tabName = "improved",   icon = icon("arrow-up")),
+      menuItem("Medal Map",       tabName = "medal_map",  icon = icon("map"))   # NEW
     )
   ),
   
@@ -384,6 +385,7 @@ ui <- dashboardPage(
                              tags$li(icon("flag"), " 230 countries and territories represented"),
                              tags$li(icon("running"), " 66 different Olympic sports analyzed"),
                              tags$li(icon("trophy"), " Interactive charts and country comparisons"),
+                             tags$li(icon("map"), " Interactive world map of medal-winning nations"),
                              tags$li(icon("download"), " Export capabilities for deeper analysis")
                            )
                          ),
@@ -540,8 +542,8 @@ ui <- dashboardPage(
                                         selected = "both", inline = TRUE),
                            hr(),
                            helpText(icon("info-circle"), " Compare Olympic performance between any two nations.")
-                )
-                  ),
+                       )
+                ),
                 column(8,
                        box(width = NULL, solidHeader = TRUE,
                            title = "Medal Comparison",
@@ -784,8 +786,60 @@ ui <- dashboardPage(
                            DT::dataTableOutput("most_improved_table"))
                 )
               )
-      )
+      ),
       
-    )   
-  )    
-)       
+      # ========================================
+      # MEDAL MAP TAB  — NEW
+      # ========================================
+      tabItem(tabName = "medal_map",
+              h2(icon("map"), " Medal Map"),
+              
+              fluidRow(
+                column(4,
+                       box(width = NULL, status = "primary", solidHeader = TRUE,
+                           title = "Filters",
+                           
+                           selectInput("map_year", "Select Year:",
+                                       choices = NULL, selected = NULL),
+                           
+                           radioButtons("map_medal", "Medal Type:",
+                                        choices = c("All Medals"  = "all",
+                                                    "Gold Only"   = "Gold",
+                                                    "Silver Only" = "Silver",
+                                                    "Bronze Only" = "Bronze"),
+                                        selected = "all", inline = TRUE),
+                           
+                           hr(),
+                           
+                           radioButtons("map_season", "Season:",
+                                        choices = c("Both"   = "both",
+                                                    "Summer" = "Summer",
+                                                    "Winter" = "Winter"),
+                                        selected = "both", inline = TRUE),
+                           
+                           hr(),
+                           helpText(icon("info-circle"),
+                                    "Each circle represents a country. Circle size reflects
+                                total medals won. Click a circle for a flag and full
+                                medal breakdown.")
+                       )
+                ),
+                column(8,
+                       box(width = NULL, solidHeader = TRUE,
+                           title = "Athletes by Country",
+                           leafletOutput("medal_map", height = "550px"))
+                )
+              ),
+              
+              fluidRow(
+                column(12,
+                       box(width = NULL, solidHeader = TRUE,
+                           title = "Medal Table for Selected Filters",
+                           DT::dataTableOutput("map_medal_table"))
+                )
+              )
+      )  
+      
+    ) 
+  )   
+)        
