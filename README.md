@@ -7,9 +7,7 @@ We allow users to look into comparative metrics behind countries and when they h
 
 ### Members
 
-Jack Roszko
-Tilman Gates
-James Haley
+Jack Roszko, Tilman Gates, James Haley
 
 ### Tab Overview
 
