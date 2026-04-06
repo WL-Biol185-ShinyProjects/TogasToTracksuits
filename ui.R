@@ -70,7 +70,7 @@ ui <- dashboardPage(
       menuItem("My Country",      tabName = "my_country", icon = icon("star")),
       menuItem("Dominance Index", tabName = "dominance",  icon = icon("trophy")),
       menuItem("Most Improved",   tabName = "improved",   icon = icon("arrow-up")),
-      menuItem("Medal Map",       tabName = "medal_map",  icon = icon("map"))   # NEW
+      menuItem("Medal Map",       tabName = "medal_map",  icon = icon("map"))
     )
   ),
   
@@ -431,13 +431,13 @@ ui <- dashboardPage(
               
               fluidRow(
                 column(3, div(class = "metric-card",
-                              h4("🏅 Total Medals"), h2("39,783"))),
+                              h4("\U0001F3C5 Total Medals"), h2("39,783"))),
                 column(3, div(class = "metric-card",
-                              h4("👥 Athletes"), h2("134,732"))),
+                              h4("\U0001F465 Athletes"), h2("134,732"))),
                 column(3, div(class = "metric-card",
-                              h4("🌍 Countries"), h2("230"))),
+                              h4("\U0001F30D Countries"), h2("230"))),
                 column(3, div(class = "metric-card",
-                              h4("⚽ Sports"), h2("66")))
+                              h4("\u26BD Sports"), h2("66")))
               ),
               
               br(),
@@ -494,13 +494,13 @@ ui <- dashboardPage(
               
               fluidRow(
                 column(3, div(class = "metric-card",
-                              h4("🏅 Total Medals"), h2(textOutput("athlete_total_medals", inline = TRUE)))),
+                              h4("\U0001F3C5 Total Medals"), h2(textOutput("athlete_total_medals", inline = TRUE)))),
                 column(3, div(class = "metric-card",
-                              h4("🥇 Gold"), h2(textOutput("athlete_gold", inline = TRUE)))),
+                              h4("\U0001F947 Gold"), h2(textOutput("athlete_gold", inline = TRUE)))),
                 column(3, div(class = "metric-card",
-                              h4("🥈 Silver"), h2(textOutput("athlete_silver", inline = TRUE)))),
+                              h4("\U0001F948 Silver"), h2(textOutput("athlete_silver", inline = TRUE)))),
                 column(3, div(class = "metric-card",
-                              h4("🥉 Bronze"), h2(textOutput("athlete_bronze", inline = TRUE))))
+                              h4("\U0001F949 Bronze"), h2(textOutput("athlete_bronze", inline = TRUE))))
               ),
               
               br(),
@@ -585,11 +585,11 @@ ui <- dashboardPage(
                 column(8,
                        fluidRow(
                          column(4, div(class = "metric-card",
-                                       h4("🏅 Total Medals"), h2(textOutput("sport_medals", inline = TRUE)))),
+                                       h4("\U0001F3C5 Total Medals"), h2(textOutput("sport_medals", inline = TRUE)))),
                          column(4, div(class = "metric-card",
-                                       h4("👥 Athletes"), h2(textOutput("sport_athletes", inline = TRUE)))),
+                                       h4("\U0001F465 Athletes"), h2(textOutput("sport_athletes", inline = TRUE)))),
                          column(4, div(class = "metric-card",
-                                       h4("🌍 Countries"), h2(textOutput("sport_countries", inline = TRUE))))
+                                       h4("\U0001F30D Countries"), h2(textOutput("sport_countries", inline = TRUE))))
                        )
                 )
               ),
@@ -634,13 +634,13 @@ ui <- dashboardPage(
                 column(8,
                        fluidRow(
                          column(3, div(class = "metric-card",
-                                       h4("🏅 Total Medals"), h2(textOutput("fav_total_medals", inline = TRUE)))),
+                                       h4("\U0001F3C5 Total Medals"), h2(textOutput("fav_total_medals", inline = TRUE)))),
                          column(3, div(class = "metric-card",
-                                       h4("🥇 Gold"), h2(textOutput("fav_gold", inline = TRUE)))),
+                                       h4("\U0001F947 Gold"), h2(textOutput("fav_gold", inline = TRUE)))),
                          column(3, div(class = "metric-card",
-                                       h4("🥈 Silver"), h2(textOutput("fav_silver", inline = TRUE)))),
+                                       h4("\U0001F948 Silver"), h2(textOutput("fav_silver", inline = TRUE)))),
                          column(3, div(class = "metric-card",
-                                       h4("🥉 Bronze"), h2(textOutput("fav_bronze", inline = TRUE))))
+                                       h4("\U0001F949 Bronze"), h2(textOutput("fav_bronze", inline = TRUE))))
                        )
                 )
               ),
@@ -676,6 +676,7 @@ ui <- dashboardPage(
       
       # ========================================
       # DOMINANCE INDEX TAB
+      # — Medal type filter removed; always all medals
       # ========================================
       tabItem(tabName = "dominance",
               h2(icon("trophy"), " Dominance Index"),
@@ -684,11 +685,6 @@ ui <- dashboardPage(
                 column(4,
                        box(width = NULL, status = "primary", solidHeader = TRUE,
                            title = "Controls",
-                           selectInput("dominance_medal", "Medal Type:",
-                                       choices = c("All Medals" = "all",
-                                                   "Gold Only"  = "Gold"),
-                                       selected = "all"),
-                           hr(),
                            selectInput("dominance_season", "Season:",
                                        choices = c("Both"   = "both",
                                                    "Summer" = "Summer",
@@ -742,6 +738,7 @@ ui <- dashboardPage(
       
       # ========================================
       # MOST IMPROVED TAB
+      # — Decade selectors replace hardcoded 1990s vs 2010s
       # ========================================
       tabItem(tabName = "improved",
               h2(icon("arrow-up"), " Most Improved Countries"),
@@ -750,21 +747,22 @@ ui <- dashboardPage(
                 column(4,
                        box(width = NULL, status = "primary", solidHeader = TRUE,
                            title = "Controls",
-                           radioButtons("improved_medal", "Medal Type:",
-                                        choices = c("All Medals" = "all", "Gold Only" = "Gold"),
-                                        selected = "all", inline = TRUE),
+                           selectInput("improved_decade_from", "Compare From (Earlier Decade):",
+                                       choices = NULL, selected = NULL),
+                           selectInput("improved_decade_to", "To (Later Decade):",
+                                       choices = NULL, selected = NULL),
                            hr(),
-                           helpText(icon("info-circle"), " Shows countries with the biggest medal count improvement from the 1990s to the 2010s.")
+                           helpText(icon("info-circle"), " Shows countries with the biggest medal count change between the two selected decades.")
                        )
                 ),
                 column(8,
                        fluidRow(
                          column(4, div(class = "metric-card",
-                                       h4("🏆 Most Improved"), h2(textOutput("top_improved_country", inline = TRUE)))),
+                                       h4("\U0001F3C6 Most Improved"), h2(textOutput("top_improved_country", inline = TRUE)))),
                          column(4, div(class = "metric-card",
-                                       h4("📈 Medals Then"), h2(textOutput("top_improved_then", inline = TRUE)))),
+                                       h4("\U0001F4C8 Medals Then"), h2(textOutput("top_improved_then", inline = TRUE)))),
                          column(4, div(class = "metric-card",
-                                       h4("🚀 Medals Now"), h2(textOutput("top_improved_now", inline = TRUE))))
+                                       h4("\U0001F680 Medals Now"), h2(textOutput("top_improved_now", inline = TRUE))))
                        )
                 )
               ),
@@ -774,7 +772,7 @@ ui <- dashboardPage(
               fluidRow(
                 column(12,
                        box(width = NULL, solidHeader = TRUE,
-                           title = "Top 15 Most Improved Countries (1990s vs 2010s)",
+                           title = "Top 15 Most Improved Countries",
                            plotlyOutput("most_improved_bar", height = "500px"))
                 )
               ),
@@ -789,7 +787,7 @@ ui <- dashboardPage(
       ),
       
       # ========================================
-      # MEDAL MAP TAB  — NEW
+      # MEDAL MAP TAB
       # ========================================
       tabItem(tabName = "medal_map",
               h2(icon("map"), " Medal Map"),
@@ -838,8 +836,8 @@ ui <- dashboardPage(
                            DT::dataTableOutput("map_medal_table"))
                 )
               )
-      )  
+      )
       
-    ) 
-  )   
-)        
+    )
+  )
+)

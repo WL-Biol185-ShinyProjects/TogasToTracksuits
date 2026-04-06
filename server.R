@@ -616,6 +616,7 @@ function(input, output, session) {
   
   # ===========================================================================
   # DOMINANCE INDEX TAB
+  # — Medal type filter removed; always uses all medals
   # ===========================================================================
   
   dominance_df <- reactive({
@@ -624,10 +625,6 @@ function(input, output, session) {
     
     if (input$dominance_season != "both") {
       df <- df %>% filter(Season == input$dominance_season)
-    }
-    
-    if (input$dominance_medal == "Gold") {
-      df <- df %>% filter(Medal == "Gold")
     }
     
     df <- df %>%
@@ -907,29 +904,50 @@ function(input, output, session) {
   
   # ===========================================================================
   # MOST IMPROVED TAB
+  # — Replaced fixed 1990s vs 2010s comparison with user-selectable decades
   # ===========================================================================
   
+  # Populate decade dropdowns dynamically from the data
+  observe({
+    all_decades <- medal_data %>%
+      filter(Medal %in% c("Gold", "Silver", "Bronze")) %>%
+      mutate(Decade = paste0(floor(Year / 10) * 10, "s")) %>%
+      pull(Decade) %>%
+      unique() %>%
+      sort()
+    
+    updateSelectInput(session, "improved_decade_from",
+                      choices  = all_decades,
+                      selected = ifelse("1990s" %in% all_decades, "1990s", all_decades[length(all_decades) - 1]))
+    
+    updateSelectInput(session, "improved_decade_to",
+                      choices  = all_decades,
+                      selected = ifelse("2010s" %in% all_decades, "2010s", all_decades[length(all_decades)]))
+  })
+  
   improved_df <- reactive({
+    req(input$improved_decade_from, input$improved_decade_to)
+    
     df <- medal_data %>%
       filter(Medal %in% c("Gold", "Silver", "Bronze"))
     
-    if (input$improved_medal == "Gold") {
-      df <- df %>% filter(Medal == "Gold")
-    }
+    # Parse decade start years from labels like "1990s"
+    from_start <- as.integer(sub("s$", "", input$improved_decade_from))
+    to_start   <- as.integer(sub("s$", "", input$improved_decade_to))
     
-    nineties <- df %>%
-      filter(Year >= 1990, Year <= 1999) %>%
+    decade_from <- df %>%
+      filter(Year >= from_start, Year <= from_start + 9) %>%
       count(Team) %>%
-      rename(Medals_1990s = n)
+      rename(Medals_From = n)
     
-    twenty_tens <- df %>%
-      filter(Year >= 2010, Year <= 2016) %>%
+    decade_to <- df %>%
+      filter(Year >= to_start, Year <= to_start + 9) %>%
       count(Team) %>%
-      rename(Medals_2010s = n)
+      rename(Medals_To = n)
     
-    improved <- nineties %>%
-      inner_join(twenty_tens, by = "Team") %>%
-      mutate(Improvement = Medals_2010s - Medals_1990s) %>%
+    improved <- decade_from %>%
+      inner_join(decade_to, by = "Team") %>%
+      mutate(Improvement = Medals_To - Medals_From) %>%
       arrange(desc(Improvement))
     
     return(improved)
@@ -940,11 +958,11 @@ function(input, output, session) {
   })
   
   output$top_improved_then <- renderText({
-    improved_df() %>% slice(1) %>% pull(Medals_1990s)
+    improved_df() %>% slice(1) %>% pull(Medals_From)
   })
   
   output$top_improved_now <- renderText({
-    improved_df() %>% slice(1) %>% pull(Medals_2010s)
+    improved_df() %>% slice(1) %>% pull(Medals_To)
   })
   
   output$most_improved_bar <- renderPlotly({
@@ -957,11 +975,12 @@ function(input, output, session) {
             type = "bar", orientation = "h",
             marker = list(color = "#0085C7",
                           line = list(color = "#005A8C", width = 1)),
-            text = ~paste0("+", Improvement, " medals"),
+            text = ~paste0(ifelse(Improvement >= 0, "+", ""), Improvement, " medals"),
             textposition = "outside",
             hoverinfo = "y+text") %>%
       layout(
-        xaxis = list(title = "Medal Increase (1990s → 2010s)"),
+        xaxis = list(title = paste0("Medal Change (", input$improved_decade_from,
+                                    " \u2192 ", input$improved_decade_to, ")")),
         yaxis = list(title = ""),
         paper_bgcolor = "white",
         plot_bgcolor  = "white"
@@ -972,9 +991,20 @@ function(input, output, session) {
     df <- improved_df() %>%
       head(20) %>%
       mutate(Change = paste0(ifelse(Improvement > 0, "+", ""), Improvement)) %>%
-      select(Team, Medals_1990s, Medals_2010s, Change) %>%
-      rename(Country = Team, `1990s Medals` = Medals_1990s,
-             `2010s Medals` = Medals_2010s)
+      select(Team, Medals_From, Medals_To, Change) %>%
+      rename(
+        Country                                                = Team,
+        `Medals_From`                                         = Medals_From,
+        `Medals_To`                                           = Medals_To
+      )
+    
+    # Rename columns dynamically to reflect chosen decades
+    colnames(df) <- c(
+      "Country",
+      paste0(input$improved_decade_from, " Medals"),
+      paste0(input$improved_decade_to,   " Medals"),
+      "Change"
+    )
     
     DT::datatable(df,
                   options = list(pageLength = 20, dom = 't', scrollX = TRUE),
@@ -982,10 +1012,9 @@ function(input, output, session) {
   })
   
   # ===========================================================================
-  # MEDAL MAP TAB  — NEW
+  # MEDAL MAP TAB
   # ===========================================================================
   
-  # NOC -> country name + ISO2 flag code + lat/lon for all 230 NOCs in dataset
   noc_lookup <- data.frame(
     NOC = c(
       "AFG","AHO","ALB","ALG","AND","ANG","ANT","ANZ","ARG","ARM",
@@ -1121,7 +1150,6 @@ function(input, output, session) {
     stringsAsFactors = FALSE
   )
   
-  # Populate year dropdown
   observe({
     years <- sort(unique(olympic_data$Year))
     updateSelectInput(session, "map_year",
@@ -1129,7 +1157,6 @@ function(input, output, session) {
                       selected = "all")
   })
   
-  # Reactive filtered data for map
   map_data <- reactive({
     df <- medal_data %>%
       filter(Medal %in% c("Gold", "Silver", "Bronze"))
@@ -1159,7 +1186,6 @@ function(input, output, session) {
       filter(!is.na(lat), !is.na(lon))
   })
   
-  # Render leaflet map
   output$medal_map <- renderLeaflet({
     df <- map_data()
     
@@ -1220,7 +1246,6 @@ function(input, output, session) {
       )
   })
   
-  # Medal table below the map
   output$map_medal_table <- DT::renderDataTable({
     df <- map_data() %>%
       arrange(desc(Total)) %>%
@@ -1246,7 +1271,7 @@ function(input, output, session) {
           list(className = "dt-center", targets = c(1, 2, 3, 4, 5))
         )
       ),
-      colnames = c("Country", "NOC", "🥇 Gold", "🥈 Silver", "🥉 Bronze", "Total")
+      colnames = c("Country", "NOC", "\U0001F947 Gold", "\U0001F948 Silver", "\U0001F949 Bronze", "Total")
     ) %>%
       DT::formatStyle("Gold",   color = "#DAA520", fontWeight = "bold") %>%
       DT::formatStyle("Silver", color = "#909090", fontWeight = "bold") %>%
